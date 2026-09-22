@@ -3,6 +3,7 @@ package com.adrianperezcobo.dummycommerce.store.product.adapter.in.web;
 import com.adrianperezcobo.dummycommerce.store.product.adapter.in.web.request.CreateProductRequest;
 import com.adrianperezcobo.dummycommerce.store.product.adapter.in.web.request.UpdateProductRequest;
 import com.adrianperezcobo.dummycommerce.store.product.adapter.in.web.response.ProductResponse;
+import com.adrianperezcobo.dummycommerce.store.product.application.port.in.ChangeProductStatusUseCase;
 import com.adrianperezcobo.dummycommerce.store.product.application.port.in.CreateProductUseCase;
 import com.adrianperezcobo.dummycommerce.store.product.application.port.in.GetProductUseCase;
 import com.adrianperezcobo.dummycommerce.store.product.application.port.in.UpdateProductUseCase;
@@ -21,17 +22,20 @@ public class ProductController {
     private final GetProductUseCase getProductUseCase;
     private final ProductWebMapper mapper;
     private final UpdateProductUseCase updateProductUseCase;
+    private final ChangeProductStatusUseCase changeProductStatusUseCase;
 
     public ProductController(
             CreateProductUseCase createProductUseCase,
             GetProductUseCase getProductUseCase,
             ProductWebMapper mapper,
-            UpdateProductUseCase updateProductUseCase
+            UpdateProductUseCase updateProductUseCase,
+            ChangeProductStatusUseCase changeProductStatusUseCase
     ) {
         this.createProductUseCase = createProductUseCase;
         this.getProductUseCase = getProductUseCase;
         this.mapper = mapper;
         this.updateProductUseCase = updateProductUseCase;
+        this.changeProductStatusUseCase = changeProductStatusUseCase;
     }
 
     @PostMapping
@@ -56,6 +60,27 @@ public class ProductController {
                         id,
                         mapper.toCommand(request)
                 )
+        );
+    }
+
+    @PatchMapping("/{id}/activate")
+    public ProductResponse activate(@PathVariable UUID id){
+        return mapper.toResponse(
+                changeProductStatusUseCase.activate(id)
+        );
+    }
+
+    @PatchMapping("/{id}/deactivate")
+    public ProductResponse deactivate(@PathVariable UUID id){
+        return mapper.toResponse(
+                changeProductStatusUseCase.deactivate(id)
+        );
+    }
+
+    @PatchMapping("/{id}/discontinue")
+    public ProductResponse discontinue(@PathVariable UUID id){
+        return mapper.toResponse(
+                changeProductStatusUseCase.discontinue(id)
         );
     }
 

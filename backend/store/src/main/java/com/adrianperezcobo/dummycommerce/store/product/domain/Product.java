@@ -1,5 +1,7 @@
 package com.adrianperezcobo.dummycommerce.store.product.domain;
 
+import com.adrianperezcobo.dummycommerce.store.product.domain.exception.InvalidProductStateException;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -88,16 +90,28 @@ public class Product {
         selectedImage.makePrimary();
     }
 
-    public void discontinue() {
-        this.status = ProductStatus.DISCONTINUED;
-    }
-
     public void activate() {
+        if (status == ProductStatus.DISCONTINUED) {
+            throw new InvalidProductStateException(
+                    "A discontinued product cannot be activated"
+            );
+        }
+
         this.status = ProductStatus.ACTIVE;
     }
 
     public void deactivate() {
+        if (status == ProductStatus.DISCONTINUED) {
+            throw new InvalidProductStateException(
+                    "A discontinued product cannot be deactivated"
+            );
+        }
+
         this.status = ProductStatus.INACTIVE;
+    }
+
+    public void discontinue() {
+        this.status = ProductStatus.DISCONTINUED;
     }
 
     public UUID getId() {

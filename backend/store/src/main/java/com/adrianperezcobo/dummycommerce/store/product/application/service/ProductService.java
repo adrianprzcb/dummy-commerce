@@ -4,6 +4,7 @@ import com.adrianperezcobo.dummycommerce.store.category.application.exception.Ca
 import com.adrianperezcobo.dummycommerce.store.category.application.port.out.CategoryRepository;
 import com.adrianperezcobo.dummycommerce.store.product.application.command.CreateProductCommand;
 import com.adrianperezcobo.dummycommerce.store.product.application.exception.ProductNotFoundException;
+import com.adrianperezcobo.dummycommerce.store.product.application.port.in.ChangeProductStatusUseCase;
 import com.adrianperezcobo.dummycommerce.store.product.application.port.in.CreateProductUseCase;
 import com.adrianperezcobo.dummycommerce.store.product.application.port.in.GetProductUseCase;
 import com.adrianperezcobo.dummycommerce.store.product.application.port.in.UpdateProductUseCase;
@@ -19,7 +20,12 @@ import java.util.UUID;
 
 @Service
 @Transactional
-public class ProductService implements CreateProductUseCase, GetProductUseCase, UpdateProductUseCase {
+public class ProductService implements
+        CreateProductUseCase,
+        GetProductUseCase,
+        UpdateProductUseCase,
+        ChangeProductStatusUseCase
+{
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -71,13 +77,44 @@ public class ProductService implements CreateProductUseCase, GetProductUseCase, 
     @Override
     @Transactional(readOnly = true)
     public Product getById(UUID id) {
-        return productRepository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException(id));
+        return getExistingProduct(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Product> getAll() {
         return productRepository.findAll();
+    }
+
+    @Override
+    public Product activate(UUID id) {
+        Product product = getExistingProduct(id);
+
+        product.activate();
+
+        return productRepository.save(product);
+    }
+
+    @Override
+    public Product deactivate(UUID id) {
+        Product product = getExistingProduct(id);
+
+        product.deactivate();
+
+        return productRepository.save(product);
+    }
+
+    @Override
+    public Product discontinue(UUID id) {
+        Product product = getExistingProduct(id);
+
+        product.discontinue();
+
+        return productRepository.save(product);
+    }
+
+    private Product getExistingProduct(UUID id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException(id));
     }
 }

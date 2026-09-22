@@ -2,6 +2,7 @@ package com.adrianperezcobo.dummycommerce.store.shared.adapter.in.web;
 
 import com.adrianperezcobo.dummycommerce.store.category.application.exception.CategoryNotFoundException;
 import com.adrianperezcobo.dummycommerce.store.product.application.exception.ProductNotFoundException;
+import com.adrianperezcobo.dummycommerce.store.product.domain.exception.InvalidProductStateException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -90,6 +91,22 @@ public class GlobalExceptionHandler {
                 ));
 
         problem.setProperty("errors", errors);
+
+        return problem;
+    }
+
+    @ExceptionHandler(InvalidProductStateException.class)
+    public ProblemDetail handleInvalidProductState(
+            InvalidProductStateException exception,
+            HttpServletRequest request
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Invalid product state");
+        problem.setInstance(URI.create(request.getRequestURI()));
 
         return problem;
     }
