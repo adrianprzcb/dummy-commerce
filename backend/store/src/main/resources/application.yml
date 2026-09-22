@@ -1,0 +1,24 @@
+spring:
+
+  application:
+    name: store
+
+  datasource:
+    url: ${STORE_DB_URL:jdbc:postgresql://localhost:5432/store_db}
+    username: ${STORE_DB_USER:store_user}
+    password: ${STORE_DB_PASSWORD:store_password}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+    open-in-view: false
+
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
