@@ -21,6 +21,7 @@ services:
       timeout: 5s
       retries: 10
 
+
   minio:
     image: minio/minio:latest
     container_name: dummy-commerce-minio
@@ -37,6 +38,41 @@ services:
 
     volumes:
       - minio_data:/data
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  store:
+    build:
+      context: ./backend/store
+      dockerfile: Dockerfile
+
+    container_name: dummy-commerce-store
+
+    environment:
+      STORE_DB_URL: jdbc:postgresql://postgres:5432/store_db
+      STORE_DB_USER: store_user
+      STORE_DB_PASSWORD: store_password
+
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      MINIO_BUCKET: product-images
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+      minio:
+        condition: service_healthy
+
 
 volumes:
   postgres_data:
