@@ -4,6 +4,7 @@ import com.adrianperezcobo.dummycommerce.store.category.application.exception.Ca
 import com.adrianperezcobo.dummycommerce.store.product.application.exception.ProductImageNotUploadedException;
 import com.adrianperezcobo.dummycommerce.store.product.application.exception.ProductNotFoundException;
 import com.adrianperezcobo.dummycommerce.store.product.domain.exception.InvalidProductStateException;
+import com.adrianperezcobo.dummycommerce.store.product.domain.exception.ProductImageNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -123,6 +124,22 @@ public class GlobalExceptionHandler {
         );
 
         problem.setTitle("Product image not uploaded");
+        problem.setInstance(URI.create(request.getRequestURI()));
+
+        return problem;
+    }
+
+    @ExceptionHandler(ProductImageNotFoundException.class)
+    public ProblemDetail handleProductImageNotFound(
+            ProductImageNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Product image not found");
         problem.setInstance(URI.create(request.getRequestURI()));
 
         return problem;

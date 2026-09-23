@@ -5,6 +5,8 @@ import com.adrianperezcobo.dummycommerce.store.product.application.exception.Pro
 import com.adrianperezcobo.dummycommerce.store.product.application.exception.ProductNotFoundException;
 import com.adrianperezcobo.dummycommerce.store.product.application.port.in.ConfirmProductImageUseCase;
 import com.adrianperezcobo.dummycommerce.store.product.application.port.in.PrepareProductImageUploadUseCase;
+import com.adrianperezcobo.dummycommerce.store.product.application.port.in.RemoveProductImageUseCase;
+import com.adrianperezcobo.dummycommerce.store.product.application.port.in.SetPrimaryProductImageUseCase;
 import com.adrianperezcobo.dummycommerce.store.product.application.port.out.ProductImageStoragePort;
 import com.adrianperezcobo.dummycommerce.store.product.application.port.out.ProductRepository;
 import com.adrianperezcobo.dummycommerce.store.product.application.result.PreparedProductImageUpload;
@@ -16,7 +18,10 @@ import java.util.UUID;
 
 @Service
 public class ProductImageService
-        implements PrepareProductImageUploadUseCase, ConfirmProductImageUseCase {
+        implements PrepareProductImageUploadUseCase,
+        ConfirmProductImageUseCase,
+        RemoveProductImageUseCase,
+        SetPrimaryProductImageUseCase {
 
     private final ProductRepository productRepository;
     private final ProductImageStoragePort imageStorage;
@@ -72,5 +77,30 @@ public class ProductImageService
         product.addImage(image);
 
         return productRepository.save(product);
+    }
+
+    @Override
+    public void remove(UUID productId, UUID imageId) {
+        Product product = getExistingProduct(productId);
+
+        ProductImage removedImage = product.removeImage(imageId);
+
+        productRepository.save(product);
+
+        imageStorage.delete(removedImage.getObjectKey());
+    }
+
+    @Override
+    public Product setPrimary(UUID productId, UUID imageId) {
+        Product product = getExistingProduct(productId);
+
+        product.setPrimaryImage(imageId);
+
+        return productRepository.save(product);
+    }
+
+    private Product getExistingProduct(UUID productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
     }
 }

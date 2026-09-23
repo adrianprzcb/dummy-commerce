@@ -1,13 +1,10 @@
 package com.adrianperezcobo.dummycommerce.store.product.domain;
 
 import com.adrianperezcobo.dummycommerce.store.product.domain.exception.InvalidProductStateException;
+import com.adrianperezcobo.dummycommerce.store.product.domain.exception.ProductImageNotFoundException;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class Product {
 
@@ -69,9 +66,31 @@ public class Product {
     }
 
     public void addImage(ProductImage image) {
-        Objects.requireNonNull(image);
+        Objects.requireNonNull(image, "Product image cannot be null");
 
-        if (image.isPrimary()) {
+        boolean duplicatedId = images.stream()
+                .anyMatch(existing -> existing.getId().equals(image.getId()));
+
+        if (duplicatedId) {
+            throw new IllegalArgumentException(
+                    "Product image already exists: " + image.getId()
+            );
+        }
+
+        boolean duplicatedPosition = images.stream()
+                .anyMatch(existing ->
+                        existing.getPosition() == image.getPosition()
+                );
+
+        if (duplicatedPosition) {
+            throw new IllegalArgumentException(
+                    "Image position already exists: " + image.getPosition()
+            );
+        }
+
+        if (images.isEmpty()) {
+            image.makePrimary();
+        } else if (image.isPrimary()) {
             images.forEach(ProductImage::removePrimary);
         }
 
@@ -79,15 +98,36 @@ public class Product {
     }
 
     public void setPrimaryImage(UUID imageId) {
-        ProductImage selectedImage = images.stream()
-                .filter(image -> image.getId().equals(imageId))
-                .findFirst()
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Product image not found")
-                );
+        ProductImage selectedImage = getImage(imageId);
 
         images.forEach(ProductImage::removePrimary);
         selectedImage.makePrimary();
+    }
+
+    public ProductImage removeImage(UUID imageId) {
+        ProductImage image = getImage(imageId);
+
+        boolean wasPrimary = image.isPrimary();
+
+        images.remove(image);
+
+        if (wasPrimary && !images.isEmpty()) {
+            images.stream()
+                    .min(Comparator.comparingInt(ProductImage::getPosition))
+                    .orElseThrow()
+                    .makePrimary();
+        }
+
+        return image;
+    }
+
+    private ProductImage getImage(UUID imageId) {
+        return images.stream()
+                .filter(image -> image.getId().equals(imageId))
+                .findFirst()
+                .orElseThrow(() ->
+                        new ProductImageNotFoundException(imageId)
+                );
     }
 
     public void activate() {
