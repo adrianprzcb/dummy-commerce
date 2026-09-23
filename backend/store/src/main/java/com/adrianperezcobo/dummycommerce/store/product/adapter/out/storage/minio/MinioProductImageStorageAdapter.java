@@ -2,7 +2,7 @@ package com.adrianperezcobo.dummycommerce.store.product.adapter.out.storage.mini
 
 import com.adrianperezcobo.dummycommerce.store.product.application.port.out.ProductImageStoragePort;
 import io.minio.*;
-import io.minio.http.Method;
+import io.minio.Http;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
@@ -57,11 +57,11 @@ public class MinioProductImageStorageAdapter
         try {
             return minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
-                            .method(Method.PUT)
+                            .method(Http.Method.PUT)
                             .bucket(properties.bucket())
                             .object(objectKey)
                             .expiry(
-                                    expiration.toSeconds(),
+                                    Math.toIntExact(expiration.toSeconds()),
                                     TimeUnit.SECONDS
                             )
                             .build()
