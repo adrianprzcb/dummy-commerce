@@ -10,6 +10,7 @@ import com.adrianperezcobo.dummycommerce.store.product.application.result.Prepar
 import com.adrianperezcobo.dummycommerce.store.product.domain.Product;
 import com.adrianperezcobo.dummycommerce.store.product.domain.ProductImage;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -53,6 +54,7 @@ public class ProductImageService
     }
 
     @Override
+    @Transactional
     public Product confirm(UUID productId, UUID imageId, ConfirmProductImageCommand command) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
@@ -78,6 +80,7 @@ public class ProductImageService
     }
 
     @Override
+    @Transactional
     public void remove(UUID productId, UUID imageId) {
         Product product = getExistingProduct(productId);
 
@@ -89,6 +92,7 @@ public class ProductImageService
     }
 
     @Override
+    @Transactional
     public Product setPrimary(UUID productId, UUID imageId) {
         Product product = getExistingProduct(productId);
 
@@ -103,6 +107,7 @@ public class ProductImageService
     }
 
     @Override
+    @Transactional(readOnly = true)
     public String getAccessUrl(UUID productId, UUID imageId) {
         Product product = getExistingProduct(productId);
 
