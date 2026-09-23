@@ -1,4 +1,4 @@
-package com.adrianperezcobo.dummycommerce.store.domain;
+package com.adrianperezcobo.dummycommerce.store.product.domain;
 
 import com.adrianperezcobo.dummycommerce.store.product.domain.ProductImage;
 import org.junit.jupiter.api.Test;

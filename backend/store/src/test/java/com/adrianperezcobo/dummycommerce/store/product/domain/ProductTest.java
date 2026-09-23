@@ -1,4 +1,4 @@
-package com.adrianperezcobo.dummycommerce.store.domain;
+package com.adrianperezcobo.dummycommerce.store.product.domain;
 
 import com.adrianperezcobo.dummycommerce.store.product.domain.Product;
 import com.adrianperezcobo.dummycommerce.store.product.domain.ProductImage;
