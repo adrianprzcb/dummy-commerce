@@ -1,13 +1,8 @@
 package com.adrianperezcobo.dummycommerce.store.product.application.port.out;
 
-import java.time.Duration;
-
 public interface ProductImageStoragePort {
 
-    String createUploadUrl(
-            String objectKey,
-            Duration expiration
-    );
+    String createUploadUrl(String objectKey);
 
     boolean exists(String objectKey);
 

@@ -50,10 +50,7 @@ public class MinioProductImageStorageAdapter
     }
 
     @Override
-    public String createUploadUrl(
-            String objectKey,
-            Duration expiration
-    ) {
+    public String createUploadUrl(String objectKey) {
         try {
             return minioClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
@@ -61,7 +58,7 @@ public class MinioProductImageStorageAdapter
                             .bucket(properties.bucket())
                             .object(objectKey)
                             .expiry(
-                                    Math.toIntExact(expiration.toSeconds()),
+                                    properties.uploadUrlExpirationSeconds(),
                                     TimeUnit.SECONDS
                             )
                             .build()
@@ -74,6 +71,7 @@ public class MinioProductImageStorageAdapter
             );
         }
     }
+
 
     @Override
     public boolean exists(String objectKey) {
