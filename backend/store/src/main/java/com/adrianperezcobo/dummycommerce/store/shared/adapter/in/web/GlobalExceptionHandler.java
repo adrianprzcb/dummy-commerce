@@ -1,6 +1,7 @@
 package com.adrianperezcobo.dummycommerce.store.shared.adapter.in.web;
 
 import com.adrianperezcobo.dummycommerce.store.category.application.exception.CategoryNotFoundException;
+import com.adrianperezcobo.dummycommerce.store.product.application.exception.ProductImageNotUploadedException;
 import com.adrianperezcobo.dummycommerce.store.product.application.exception.ProductNotFoundException;
 import com.adrianperezcobo.dummycommerce.store.product.domain.exception.InvalidProductStateException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -106,6 +107,22 @@ public class GlobalExceptionHandler {
         );
 
         problem.setTitle("Invalid product state");
+        problem.setInstance(URI.create(request.getRequestURI()));
+
+        return problem;
+    }
+
+    @ExceptionHandler(ProductImageNotUploadedException.class)
+    public ProblemDetail handleProductImageNotUploaded(
+            ProductImageNotUploadedException exception,
+            HttpServletRequest request
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Product image not uploaded");
         problem.setInstance(URI.create(request.getRequestURI()));
 
         return problem;
