@@ -10,6 +10,8 @@ import com.adrianperezcobo.dummycommerce.store.product.domain.Product;
 import com.adrianperezcobo.dummycommerce.store.product.domain.ProductImage;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class ProductWebMapper {
 
@@ -32,15 +34,25 @@ public class ProductWebMapper {
                 product.getCategoryId(),
                 product.getImages()
                         .stream()
-                        .map(this::toImageResponse)
+                        .map(image -> toImageResponse(
+                                product.getId(),
+                                image
+                        ))
                         .toList()
         );
     }
 
-    private ProductImageResponse toImageResponse(ProductImage image) {
+    private ProductImageResponse toImageResponse(
+            UUID productId,
+            ProductImage image
+    ) {
         return new ProductImageResponse(
                 image.getId(),
-                image.getObjectKey(),
+                "/api/products/"
+                        + productId
+                        + "/images/"
+                        + image.getId()
+                        + "/content",
                 image.getAltText(),
                 image.getPosition(),
                 image.isPrimary()

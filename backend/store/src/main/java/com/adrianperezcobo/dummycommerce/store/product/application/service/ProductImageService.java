@@ -3,10 +3,7 @@ package com.adrianperezcobo.dummycommerce.store.product.application.service;
 import com.adrianperezcobo.dummycommerce.store.product.application.command.ConfirmProductImageCommand;
 import com.adrianperezcobo.dummycommerce.store.product.application.exception.ProductImageNotUploadedException;
 import com.adrianperezcobo.dummycommerce.store.product.application.exception.ProductNotFoundException;
-import com.adrianperezcobo.dummycommerce.store.product.application.port.in.ConfirmProductImageUseCase;
-import com.adrianperezcobo.dummycommerce.store.product.application.port.in.PrepareProductImageUploadUseCase;
-import com.adrianperezcobo.dummycommerce.store.product.application.port.in.RemoveProductImageUseCase;
-import com.adrianperezcobo.dummycommerce.store.product.application.port.in.SetPrimaryProductImageUseCase;
+import com.adrianperezcobo.dummycommerce.store.product.application.port.in.*;
 import com.adrianperezcobo.dummycommerce.store.product.application.port.out.ProductImageStoragePort;
 import com.adrianperezcobo.dummycommerce.store.product.application.port.out.ProductRepository;
 import com.adrianperezcobo.dummycommerce.store.product.application.result.PreparedProductImageUpload;
@@ -21,7 +18,8 @@ public class ProductImageService
         implements PrepareProductImageUploadUseCase,
         ConfirmProductImageUseCase,
         RemoveProductImageUseCase,
-        SetPrimaryProductImageUseCase {
+        SetPrimaryProductImageUseCase,
+        GetProductImageContentUseCase {
 
     private final ProductRepository productRepository;
     private final ProductImageStoragePort imageStorage;
@@ -102,5 +100,14 @@ public class ProductImageService
     private Product getExistingProduct(UUID productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
+    }
+
+    @Override
+    public String getAccessUrl(UUID productId, UUID imageId) {
+        Product product = getExistingProduct(productId);
+
+        String objectKey = product.getImageObjectKey(imageId);
+
+        return imageStorage.createReadUrl(objectKey);
     }
 }

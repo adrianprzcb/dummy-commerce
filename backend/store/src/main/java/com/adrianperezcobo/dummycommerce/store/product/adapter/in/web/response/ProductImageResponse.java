@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public record ProductImageResponse(
         UUID id,
-        String objectKey,
+        String contentUrl,
         String altText,
         int position,
         boolean primary

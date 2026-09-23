@@ -4,15 +4,14 @@ import com.adrianperezcobo.dummycommerce.store.product.adapter.in.web.request.Co
 import com.adrianperezcobo.dummycommerce.store.product.adapter.in.web.response.PrepareProductImageUploadResponse;
 import com.adrianperezcobo.dummycommerce.store.product.adapter.in.web.response.ProductResponse;
 import com.adrianperezcobo.dummycommerce.store.product.application.command.ConfirmProductImageCommand;
-import com.adrianperezcobo.dummycommerce.store.product.application.port.in.ConfirmProductImageUseCase;
-import com.adrianperezcobo.dummycommerce.store.product.application.port.in.PrepareProductImageUploadUseCase;
-import com.adrianperezcobo.dummycommerce.store.product.application.port.in.RemoveProductImageUseCase;
-import com.adrianperezcobo.dummycommerce.store.product.application.port.in.SetPrimaryProductImageUseCase;
+import com.adrianperezcobo.dummycommerce.store.product.application.port.in.*;
 import com.adrianperezcobo.dummycommerce.store.product.application.result.PreparedProductImageUpload;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -23,6 +22,7 @@ public class ProductImageController {
     private final ConfirmProductImageUseCase confirmProductImageUseCase;
     private final RemoveProductImageUseCase removeProductImageUseCase;
     private final SetPrimaryProductImageUseCase setPrimaryProductImageUseCase;
+    private final GetProductImageContentUseCase getProductImageContentUseCase;
     private final ProductWebMapper productWebMapper;
 
     public ProductImageController(
@@ -30,6 +30,7 @@ public class ProductImageController {
             ConfirmProductImageUseCase confirmProductImageUseCase,
             RemoveProductImageUseCase removeProductImageUseCase,
             SetPrimaryProductImageUseCase setPrimaryProductImageUseCase,
+            GetProductImageContentUseCase getProductImageContentUseCase,
             ProductWebMapper productWebMapper
 
     ) {
@@ -37,6 +38,7 @@ public class ProductImageController {
         this.confirmProductImageUseCase = confirmProductImageUseCase;
         this.removeProductImageUseCase = removeProductImageUseCase;
         this.setPrimaryProductImageUseCase = setPrimaryProductImageUseCase;
+        this.getProductImageContentUseCase = getProductImageContentUseCase;
         this.productWebMapper = productWebMapper;
     }
 
@@ -93,6 +95,22 @@ public class ProductImageController {
                         imageId
                 )
         );
+    }
+
+    @GetMapping("/{imageId}/content")
+    public ResponseEntity<Void> getContent(
+            @PathVariable UUID productId,
+            @PathVariable UUID imageId
+    ) {
+        String accessUrl = getProductImageContentUseCase.getAccessUrl(
+                productId,
+                imageId
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.TEMPORARY_REDIRECT)
+                .location(URI.create(accessUrl))
+                .build();
     }
 
 }

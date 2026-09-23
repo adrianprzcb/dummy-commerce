@@ -72,6 +72,29 @@ public class MinioProductImageStorageAdapter
         }
     }
 
+    @Override
+    public String createReadUrl(String objectKey) {
+        try {
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Http.Method.GET)
+                            .bucket(properties.bucket())
+                            .object(objectKey)
+                            .expiry(
+                                    properties.uploadUrlExpirationSeconds(),
+                                    TimeUnit.SECONDS
+                            )
+                            .build()
+            );
+
+        } catch (Exception exception) {
+            throw new IllegalStateException(
+                    "Could not create image read URL",
+                    exception
+            );
+        }
+    }
+
 
     @Override
     public boolean exists(String objectKey) {

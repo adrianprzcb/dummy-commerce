@@ -150,6 +150,13 @@ public class Product {
         this.status = ProductStatus.INACTIVE;
     }
 
+
+    public String getImageObjectKey(UUID imageId) {
+        return getImage(imageId).getObjectKey();
+    }
+
+
+
     public void discontinue() {
         this.status = ProductStatus.DISCONTINUED;
     }
