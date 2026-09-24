@@ -1,50 +1,62 @@
 package com.adrianperezcobo.dummycommerce.store.product.adapter.out.storage.minio;
 
 import com.adrianperezcobo.dummycommerce.store.product.application.port.out.ProductImageStoragePort;
-import io.minio.*;
-import io.minio.Http;
+import io.minio.BucketExistsArgs;
+import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.MakeBucketArgs;
+import io.minio.MinioClient;
+import io.minio.RemoveObjectArgs;
+import io.minio.StatObjectArgs;
+import io.minio.Http.*;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 @Component
 public class MinioProductImageStorageAdapter
         implements ProductImageStoragePort {
 
-    private final MinioClient minioClient;
+    private final MinioClient internalClient;
+    private final MinioClient publicClient;
     private final MinioProperties properties;
 
     public MinioProductImageStorageAdapter(
-            MinioClient minioClient,
+            @Qualifier("minioInternalClient")
+            MinioClient internalClient,
+
+            @Qualifier("minioPublicClient")
+            MinioClient publicClient,
+
             MinioProperties properties
     ) {
-        this.minioClient = minioClient;
+        this.internalClient = internalClient;
+        this.publicClient = publicClient;
         this.properties = properties;
     }
 
     @PostConstruct
     void initializeBucket() {
         try {
-            boolean exists = minioClient.bucketExists(
+            boolean exists = internalClient.bucketExists(
                     BucketExistsArgs.builder()
                             .bucket(properties.bucket())
                             .build()
             );
 
             if (!exists) {
-                minioClient.makeBucket(
+                internalClient.makeBucket(
                         MakeBucketArgs.builder()
                                 .bucket(properties.bucket())
                                 .build()
                 );
             }
 
-        } catch (Exception exception) {
+        } catch (Exception e) {
             throw new IllegalStateException(
-                    "Could not initialize product image bucket",
-                    exception
+                    "Could not initialize MinIO bucket",
+                    e
             );
         }
     }
@@ -52,9 +64,9 @@ public class MinioProductImageStorageAdapter
     @Override
     public String createUploadUrl(String objectKey) {
         try {
-            return minioClient.getPresignedObjectUrl(
+            return publicClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
-                            .method(Http.Method.PUT)
+                            .method(Method.PUT)
                             .bucket(properties.bucket())
                             .object(objectKey)
                             .expiry(
@@ -64,10 +76,10 @@ public class MinioProductImageStorageAdapter
                             .build()
             );
 
-        } catch (Exception exception) {
+        } catch (Exception e) {
             throw new IllegalStateException(
-                    "Could not create image upload URL",
-                    exception
+                    "Could not create MinIO upload URL",
+                    e
             );
         }
     }
@@ -75,9 +87,9 @@ public class MinioProductImageStorageAdapter
     @Override
     public String createReadUrl(String objectKey) {
         try {
-            return minioClient.getPresignedObjectUrl(
+            return publicClient.getPresignedObjectUrl(
                     GetPresignedObjectUrlArgs.builder()
-                            .method(Http.Method.GET)
+                            .method(Method.GET)
                             .bucket(properties.bucket())
                             .object(objectKey)
                             .expiry(
@@ -87,19 +99,18 @@ public class MinioProductImageStorageAdapter
                             .build()
             );
 
-        } catch (Exception exception) {
+        } catch (Exception e) {
             throw new IllegalStateException(
-                    "Could not create image read URL",
-                    exception
+                    "Could not create MinIO read URL",
+                    e
             );
         }
     }
 
-
     @Override
     public boolean exists(String objectKey) {
         try {
-            minioClient.statObject(
+            internalClient.statObject(
                     StatObjectArgs.builder()
                             .bucket(properties.bucket())
                             .object(objectKey)
@@ -108,7 +119,7 @@ public class MinioProductImageStorageAdapter
 
             return true;
 
-        } catch (Exception exception) {
+        } catch (Exception e) {
             return false;
         }
     }
@@ -116,17 +127,17 @@ public class MinioProductImageStorageAdapter
     @Override
     public void delete(String objectKey) {
         try {
-            minioClient.removeObject(
+            internalClient.removeObject(
                     RemoveObjectArgs.builder()
                             .bucket(properties.bucket())
                             .object(objectKey)
                             .build()
             );
 
-        } catch (Exception exception) {
+        } catch (Exception e) {
             throw new IllegalStateException(
-                    "Could not delete product image",
-                    exception
+                    "Could not delete MinIO object",
+                    e
             );
         }
     }

@@ -10,9 +10,24 @@ import org.springframework.context.annotation.Configuration;
 public class MinioConfig {
 
     @Bean
-    public MinioClient minioClient(MinioProperties properties) {
+    public MinioClient minioInternalClient(
+            MinioProperties properties
+    ) {
         return MinioClient.builder()
                 .endpoint(properties.endpoint())
+                .credentials(
+                        properties.accessKey(),
+                        properties.secretKey()
+                )
+                .build();
+    }
+
+    @Bean
+    public MinioClient minioPublicClient(
+            MinioProperties properties
+    ) {
+        return MinioClient.builder()
+                .endpoint(properties.publicEndpoint())
                 .credentials(
                         properties.accessKey(),
                         properties.secretKey()
