@@ -1,5 +1,7 @@
 package com.adrianperezcobo.dummycommerce.users.auth.adapter.in.web;
 
+import com.adrianperezcobo.dummycommerce.users.auth.adapter.in.web.request.RegisterUserRequest;
+import com.adrianperezcobo.dummycommerce.users.auth.adapter.in.web.response.RegisterUserResponse;
 import com.adrianperezcobo.dummycommerce.users.auth.application.command.RegisterUserCommand;
 import com.adrianperezcobo.dummycommerce.users.auth.application.port.in.RegisterUserUseCase;
 import com.adrianperezcobo.dummycommerce.users.user.domain.User;

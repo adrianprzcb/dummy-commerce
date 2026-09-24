@@ -1,4 +1,4 @@
-package com.adrianperezcobo.dummycommerce.users.auth.adapter.in.web;
+package com.adrianperezcobo.dummycommerce.users.auth.adapter.in.web.response;
 
 import com.adrianperezcobo.dummycommerce.users.user.domain.Role;
 
