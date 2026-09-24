@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: users
+
+  datasource:
+    url: ${USERS_DB_URL:jdbc:postgresql://localhost:5432/users_db}
+    username: ${USERS_DB_USER:users_user}
+    password: ${USERS_DB_PASSWORD:users_password}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
