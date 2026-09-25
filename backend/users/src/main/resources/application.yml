@@ -24,7 +24,13 @@ management:
 security:
   jwt:
     secret: ${JWT_SECRET:ZHVtbXktY29tbWVyY2UtZGV2LWp3dC1zZWNyZXQtMzJiIQ==}
-    access-token-expiration-seconds: 900
+    access-token-expiration-seconds: ${JWT_ACCESS_EXPIRATION_SECONDS:900}
 
   refresh-token:
-    expiration-seconds: 2592000
+    expiration-seconds: ${REFRESH_TOKEN_EXPIRATION_SECONDS:2592000}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

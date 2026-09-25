@@ -74,6 +74,30 @@ services:
         condition: service_healthy
 
 
+  users:
+    build:
+      context: ./backend/users
+      dockerfile: Dockerfile
+
+    container_name: dummy-commerce-users
+
+    environment:
+      USERS_DB_URL: jdbc:postgresql://postgres:5432/users_db
+      USERS_DB_USER: users_user
+      USERS_DB_PASSWORD: users_password
+
+      JWT_SECRET: ZHVtbXktY29tbWVyY2UtZGV2LWp3dC1zZWNyZXQtMzJiIQ==
+      JWT_ACCESS_EXPIRATION_SECONDS: 900
+      REFRESH_TOKEN_EXPIRATION_SECONDS: 2592000
+
+    ports:
+      - "8081:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
 volumes:
   postgres_data:
   minio_data:
