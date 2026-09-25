@@ -1,9 +1,8 @@
-package com.adrianperezcobo.dummycommerce.users.auth.adapter.in.web.response;
+package com.adrianperezcobo.dummycommerce.users.auth.application.result;
 
-public record LoginResponse(
+public record RefreshTokenResult(
         String accessToken,
         String refreshToken,
-        String tokenType,
         long accessTokenExpiresIn,
         long refreshTokenExpiresIn
 ) {

@@ -2,6 +2,7 @@ package com.adrianperezcobo.dummycommerce.users.shared.adapter.in.web;
 
 import com.adrianperezcobo.dummycommerce.users.auth.application.exception.EmailAlreadyExistsException;
 import com.adrianperezcobo.dummycommerce.users.auth.application.exception.InvalidCredentialsException;
+import com.adrianperezcobo.dummycommerce.users.auth.application.exception.InvalidRefreshTokenException;
 import com.adrianperezcobo.dummycommerce.users.auth.application.exception.UserDisabledException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -93,6 +94,26 @@ public class GlobalExceptionHandler {
         );
 
         problem.setTitle("User disabled");
+        problem.setInstance(
+                URI.create(request.getRequestURI())
+        );
+
+        return problem;
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ProblemDetail handleInvalidRefreshToken(
+            InvalidRefreshTokenException exception,
+            HttpServletRequest request
+    ) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.UNAUTHORIZED,
+                        exception.getMessage()
+                );
+
+        problem.setTitle("Invalid refresh token");
+
         problem.setInstance(
                 URI.create(request.getRequestURI())
         );

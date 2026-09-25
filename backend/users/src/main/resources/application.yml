@@ -25,3 +25,6 @@ security:
   jwt:
     secret: ${JWT_SECRET:ZHVtbXktY29tbWVyY2UtZGV2LWp3dC1zZWNyZXQtMzJiIQ==}
     access-token-expiration-seconds: 900
+
+  refresh-token:
+    expiration-seconds: 2592000

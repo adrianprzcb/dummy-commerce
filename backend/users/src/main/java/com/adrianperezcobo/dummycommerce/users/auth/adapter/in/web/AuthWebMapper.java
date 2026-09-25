@@ -1,12 +1,15 @@
 package com.adrianperezcobo.dummycommerce.users.auth.adapter.in.web;
 
 import com.adrianperezcobo.dummycommerce.users.auth.adapter.in.web.request.LoginRequest;
+import com.adrianperezcobo.dummycommerce.users.auth.adapter.in.web.request.RefreshTokenRequest;
 import com.adrianperezcobo.dummycommerce.users.auth.adapter.in.web.request.RegisterUserRequest;
 import com.adrianperezcobo.dummycommerce.users.auth.adapter.in.web.response.LoginResponse;
 import com.adrianperezcobo.dummycommerce.users.auth.adapter.in.web.response.RegisterUserResponse;
 import com.adrianperezcobo.dummycommerce.users.auth.application.command.LoginUserCommand;
+import com.adrianperezcobo.dummycommerce.users.auth.application.command.RefreshTokenCommand;
 import com.adrianperezcobo.dummycommerce.users.auth.application.command.RegisterUserCommand;
 import com.adrianperezcobo.dummycommerce.users.auth.application.result.LoginResult;
+import com.adrianperezcobo.dummycommerce.users.auth.application.result.RefreshTokenResult;
 import com.adrianperezcobo.dummycommerce.users.user.domain.User;
 import org.springframework.stereotype.Component;
 
@@ -48,8 +51,30 @@ public class AuthWebMapper {
     ) {
         return new LoginResponse(
                 result.accessToken(),
+                result.refreshToken(),
                 "Bearer",
-                result.expiresIn()
+                result.accessTokenExpiresIn(),
+                result.refreshTokenExpiresIn()
+        );
+    }
+
+    public RefreshTokenCommand toCommand(
+            RefreshTokenRequest request
+    ) {
+        return new RefreshTokenCommand(
+                request.refreshToken()
+        );
+    }
+
+    public LoginResponse toResponse(
+            RefreshTokenResult result
+    ) {
+        return new LoginResponse(
+                result.accessToken(),
+                result.refreshToken(),
+                "Bearer",
+                result.accessTokenExpiresIn(),
+                result.refreshTokenExpiresIn()
         );
     }
 }
