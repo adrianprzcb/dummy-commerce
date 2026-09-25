@@ -4,6 +4,7 @@ import com.adrianperezcobo.dummycommerce.users.auth.application.exception.EmailA
 import com.adrianperezcobo.dummycommerce.users.auth.application.exception.InvalidCredentialsException;
 import com.adrianperezcobo.dummycommerce.users.auth.application.exception.InvalidRefreshTokenException;
 import com.adrianperezcobo.dummycommerce.users.auth.application.exception.UserDisabledException;
+import com.adrianperezcobo.dummycommerce.users.user.application.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -114,6 +115,25 @@ public class GlobalExceptionHandler {
 
         problem.setTitle("Invalid refresh token");
 
+        problem.setInstance(
+                URI.create(request.getRequestURI())
+        );
+
+        return problem;
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ProblemDetail handleUserNotFound(
+            UserNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(
+                        HttpStatus.NOT_FOUND,
+                        exception.getMessage()
+                );
+
+        problem.setTitle("User not found");
         problem.setInstance(
                 URI.create(request.getRequestURI())
         );
