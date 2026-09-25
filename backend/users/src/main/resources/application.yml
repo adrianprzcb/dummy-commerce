@@ -20,3 +20,8 @@ management:
     web:
       exposure:
         include: health,info
+
+security:
+  jwt:
+    secret: ${JWT_SECRET:ZHVtbXktY29tbWVyY2UtZGV2LWp3dC1zZWNyZXQtMzJiIQ==}
+    access-token-expiration-seconds: 900

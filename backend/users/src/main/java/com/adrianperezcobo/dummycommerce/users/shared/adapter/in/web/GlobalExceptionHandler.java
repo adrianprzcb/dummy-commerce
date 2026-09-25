@@ -1,6 +1,8 @@
 package com.adrianperezcobo.dummycommerce.users.shared.adapter.in.web;
 
 import com.adrianperezcobo.dummycommerce.users.auth.application.exception.EmailAlreadyExistsException;
+import com.adrianperezcobo.dummycommerce.users.auth.application.exception.InvalidCredentialsException;
+import com.adrianperezcobo.dummycommerce.users.auth.application.exception.UserDisabledException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -57,6 +59,43 @@ public class GlobalExceptionHandler {
                 );
 
         problem.setProperty("errors", errors);
+
+        return problem;
+    }
+
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ProblemDetail handleInvalidCredentials(
+            InvalidCredentialsException exception,
+            HttpServletRequest request
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNAUTHORIZED,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Invalid credentials");
+        problem.setInstance(
+                URI.create(request.getRequestURI())
+        );
+
+        return problem;
+    }
+
+    @ExceptionHandler(UserDisabledException.class)
+    public ProblemDetail handleUserDisabled(
+            UserDisabledException exception,
+            HttpServletRequest request
+    ) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.FORBIDDEN,
+                exception.getMessage()
+        );
+
+        problem.setTitle("User disabled");
+        problem.setInstance(
+                URI.create(request.getRequestURI())
+        );
 
         return problem;
     }
