@@ -15,6 +15,10 @@ public interface StockReservationRepository {
             UUID reservationId
     );
 
+    Optional<StockReservation> findByIdForUpdate(
+            UUID reservationId
+    );
+
     Optional<StockReservation> findByOrderIdAndProductId(
             UUID orderId,
             UUID productId
