@@ -105,4 +105,4 @@ public class InventoryService implements
 
         return inventoryRepository.save(item);
     }
-}
+} 
