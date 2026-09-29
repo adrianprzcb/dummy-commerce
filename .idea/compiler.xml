@@ -10,6 +10,7 @@
         <module name="store" />
         <module name="inventory" />
         <module name="users" />
+        <module name="payments" />
       </profile>
     </annotationProcessing>
   </component>
@@ -17,6 +18,7 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="inventory" options="-parameters" />
       <module name="orders" options="-parameters" />
+      <module name="payments" options="-parameters" />
       <module name="store" options="-parameters" />
       <module name="users" options="-parameters" />
     </option>

@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: payments
+
+  datasource:
+    url: ${PAYMENTS_DB_URL:jdbc:postgresql://localhost:5432/payments_db}
+    username: ${PAYMENTS_DB_USER:payments_user}
+    password: ${PAYMENTS_DB_PASSWORD:payments_password}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+
+  swagger-ui:
+    path: /swagger-ui.html
+
+payment:
+  simulator:
+    mode: ${PAYMENT_SIMULATOR_MODE:success}
