@@ -7,12 +7,14 @@ public interface PaymentProcessorPort {
 
     PaymentProcessorResult process(
             UUID paymentId,
+            UUID orderId,
             BigDecimal amount,
             String currency
     );
 
     PaymentProcessorResult refund(
             UUID paymentId,
+            UUID orderId,
             BigDecimal amount,
             String currency
     );

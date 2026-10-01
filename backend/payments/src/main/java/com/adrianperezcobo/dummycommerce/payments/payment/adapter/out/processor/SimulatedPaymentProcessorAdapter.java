@@ -23,6 +23,7 @@ public class SimulatedPaymentProcessorAdapter
     @Override
     public PaymentProcessorResult process(
             UUID paymentId,
+            UUID orderId,
             BigDecimal amount,
             String currency
     ) {
@@ -32,6 +33,7 @@ public class SimulatedPaymentProcessorAdapter
     @Override
     public PaymentProcessorResult refund(
             UUID paymentId,
+            UUID orderId,
             BigDecimal amount,
             String currency
     ) {
