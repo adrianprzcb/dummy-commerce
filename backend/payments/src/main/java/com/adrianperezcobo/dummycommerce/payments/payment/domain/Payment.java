@@ -41,7 +41,13 @@ public class Payment {
             );
         }
 
-        if (amount.signum() <= 0) {
+        BigDecimal normalizedAmount =
+                amount.setScale(
+                        2,
+                        RoundingMode.HALF_UP
+                );
+
+        if (normalizedAmount.signum() <= 0) {
             throw new IllegalArgumentException(
                     "Payment amount must be greater than zero"
             );
@@ -55,10 +61,7 @@ public class Payment {
             );
         }
 
-        this.amount = amount.setScale(
-                2,
-                RoundingMode.HALF_UP
-        );
+        this.amount = normalizedAmount;
 
         this.currency = currency
                 .toUpperCase(Locale.ROOT);
