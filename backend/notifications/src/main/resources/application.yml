@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: notifications
+
+  datasource:
+    url: ${NOTIFICATIONS_DB_URL:jdbc:postgresql://localhost:5432/notifications_db}
+    username: ${NOTIFICATIONS_DB_USER:notifications_user}
+    password: ${NOTIFICATIONS_DB_PASSWORD:notifications_password}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+
+  swagger-ui:
+    path: /swagger-ui.html
+
+notification:
+  simulator:
+    mode: ${NOTIFICATION_SIMULATOR_MODE:success}
