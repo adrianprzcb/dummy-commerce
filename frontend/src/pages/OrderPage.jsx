@@ -6,6 +6,7 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import Feedback from '../components/Feedback.jsx';
 import Status from '../components/Status.jsx';
 import { dateTime, money } from '../format.js';
+import PageHeading from '../components/PageHeading.jsx';
 
 export default function OrderPage() {
   const { id } = useParams();
@@ -35,11 +36,11 @@ export default function OrderPage() {
     return () => { controller.abort(); clearTimeout(timer); };
   }, [id, version]);
   return <>
-    <Link to="/orders">Volver a mis pedidos</Link>
-    <div className="page-heading"><h1>Detalle del pedido</h1><button className="secondary" onClick={() => setVersion(value => value + 1)}>Actualizar estado</button></div>
+    <Link className="back-link" to="/orders">← Volver a mis pedidos</Link>
+    <PageHeading eyebrow="Mi cuenta" title="Detalle del pedido" description="Consulta los productos y el estado de tu compra."><button className="secondary" onClick={() => setVersion(value => value + 1)}>Actualizar estado</button></PageHeading>
     <Feedback loading={!order && polling} error={error} />
     {order && <>
-      <section className="card"><p className="id">{order.id}</p><p>{dateTime(order.createdAt)}</p><Status value={order.status} />
+      <section className="card order-overview"><div className="order-meta"><div><p className="eyebrow">Referencia del pedido</p><p className="id">{order.id}</p><p className="muted">{dateTime(order.createdAt)}</p></div><Status value={order.status} /></div>
         {polling && <p role="status">Estamos procesando tu pedido. El estado se actualiza automáticamente.</p>}
         {!polling && !['CONFIRMED', 'CANCELLED'].includes(order.status) && <p className="notice">El pedido sigue en proceso. Puedes volver a consultar su estado más tarde.</p>}
         {order.status === 'CONFIRMED' && <p className="notice success">Tu pedido se ha confirmado.</p>}

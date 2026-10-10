@@ -5,6 +5,7 @@ import { useLoad } from '../api/useLoad.js';
 import Feedback from '../components/Feedback.jsx';
 import ProductImage from '../components/ProductImage.jsx';
 import Status from '../components/Status.jsx';
+import PageHeading from '../components/PageHeading.jsx';
 
 export default function AdminProductPage() {
   const { id } = useParams();
@@ -14,7 +15,7 @@ export default function AdminProductPage() {
   }, [id]);
   const { data, loading, error, reload } = useLoad(loader);
   return <>
-    <Link to="/admin/products">Volver a productos</Link><h1>{id ? 'Editar producto' : 'Nuevo producto'}</h1>
+    <Link className="back-link" to="/admin/products">← Volver a productos</Link><PageHeading title={id ? 'Editar producto' : 'Nuevo producto'} description="Cuida los detalles que verán tus clientes." />
     <Feedback loading={loading} error={error} />
     {data && !loading && <>
       <ProductForm key={id || 'new'} product={data.product} categories={data.categories} reload={reload} />
@@ -48,7 +49,7 @@ function ProductForm({ product, categories, reload }) {
     catch (problem) { setError(problem); }
     finally { setBusy(false); }
   }
-  return <section className="card">
+  return <section className="card"><h2>Información del producto</h2><p className="muted section-description">Nombre, descripción, precio y categoría.</p>
     <Feedback error={error} message={notice} />
     {categories.length === 0 && <p className="notice">Necesitas <Link to="/admin/categories">crear una categoría</Link> antes de guardar un producto.</p>}
     <form onSubmit={submit}>
@@ -122,7 +123,7 @@ function ProductImages({ product, reload }) {
     } catch (problem) { setError(problem); }
     finally { setBusy(false); }
   }
-  return <section className="card"><h2>Imágenes</h2><Feedback error={error} message={stage} />
+  return <section className="card"><h2>Imágenes</h2><p className="muted section-description">Sube una imagen de hasta 10 MB y elige la que representará al producto.</p><Feedback error={error} message={stage} />
     {pending ? <div className="notice"><p>La imagen se ha subido. Falta confirmar sus metadatos.</p><button disabled={busy} onClick={retry}>Reintentar confirmación</button></div>
       : <form onSubmit={upload}>
         <label>Archivo de imagen<input ref={fileInput} type="file" accept="image/*" required disabled={busy} onChange={event => setFile(event.target.files[0] || null)} /></label>

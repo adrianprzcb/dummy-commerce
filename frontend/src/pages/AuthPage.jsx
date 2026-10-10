@@ -33,8 +33,9 @@ export default function AuthPage({ register = false }) {
     } catch (problem) { setError(problem); }
     finally { setBusy(false); }
   }
-  return <section className="card auth-card">
-    <h1>{register ? 'Crear cuenta' : 'Iniciar sesión'}</h1>
+  return <div className="auth-layout"><section className="auth-intro"><p className="eyebrow">Tu espacio en la tienda</p><h2>{register ? 'Todo empieza con tu cuenta.' : 'Qué bueno tenerte de vuelta.'}</h2><p>Guarda tus compras en un solo lugar y sigue cada pedido hasta su confirmación.</p><ul><li>Compra los productos de tu carrito.</li><li>Consulta el estado de tus pedidos.</li><li>Recibe las novedades de tus compras.</li></ul><Link className="back-link" to="/">Seguir explorando el catálogo →</Link></section><section className="card auth-card">
+    <p className="eyebrow">{register ? 'Un paso más' : 'Bienvenido de nuevo'}</p><h1>{register ? 'Crear cuenta' : 'Iniciar sesión'}</h1>
+    <p className="muted">{register ? 'Crea tu cuenta para completar tu primera compra.' : 'Accede con tu email y contraseña.'}</p>
     <Feedback error={error} message={location.state?.notice} />
     <form onSubmit={submit}>
       <label>Email<input type="email" name="email" autoComplete="email" required maxLength={320} value={email} onChange={event => setEmail(event.target.value)} /></label>
@@ -42,6 +43,7 @@ export default function AuthPage({ register = false }) {
       {register && <label>Repetir contraseña<input type="password" name="confirmation" autoComplete="new-password" required minLength={8} maxLength={72} value={confirmation} onChange={event => setConfirmation(event.target.value)} /></label>}
       <button disabled={busy}>{busy ? 'Enviando…' : register ? 'Crear cuenta' : 'Entrar'}</button>
     </form>
-    <p>{register ? '¿Ya tienes cuenta? ' : '¿Todavía no tienes cuenta? '}<Link to={register ? '/login' : '/register'}>{register ? 'Inicia sesión' : 'Regístrate'}</Link></p>
-  </section>;
+    <p className="auth-switch">{register ? '¿Ya tienes cuenta? ' : '¿Todavía no tienes cuenta? '}<Link to={register ? '/login' : '/register'}>{register ? 'Inicia sesión' : 'Regístrate'}</Link></p>
+    <p className="auth-note">Puedes consultar el catálogo y preparar tu carrito sin una cuenta.</p>
+  </section></div>;
 }

@@ -4,6 +4,7 @@ import { useAuth } from './auth/AuthContext.jsx';
 import { useCart } from './components/CartContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Feedback from './components/Feedback.jsx';
+import Icon from './components/Icon.jsx';
 import AuthPage from './pages/AuthPage.jsx';
 import CatalogPage from './pages/CatalogPage.jsx';
 import ProductPage from './pages/ProductPage.jsx';
@@ -23,6 +24,7 @@ function Layout() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState(null);
   const [problem, setProblem] = useState(null);
+  const count = items.reduce((sum, item) => sum + item.quantity, 0);
   async function sessionAction(action) {
     setBusy(true); setMessage(null); setProblem(null);
     try { await action(); if (action === renew) setMessage('Sesión renovada.'); }
@@ -31,18 +33,21 @@ function Layout() {
   }
   return <>
     <a className="skip-link" href="#main">Ir al contenido</a>
-    <header><div className="header-inner"><Link className="brand" to="/">Dummy Commerce</Link>
-      <nav aria-label="Navegación principal"><NavLink end to="/">Catálogo</NavLink><NavLink to="/cart">Carrito ({items.reduce((sum, item) => sum + item.quantity, 0)})</NavLink>
-        {user && <><NavLink to="/orders">Mis pedidos</NavLink><NavLink to="/notifications">Notificaciones</NavLink>{user.role === 'ADMIN' && <NavLink to="/admin">Admin</NavLink>}</>}
+    <div className="demo-bar">Una tienda de demostración. Los pagos y las notificaciones son simulados.</div>
+    <header className="site-header"><div className="header-inner"><Link className="brand" to="/" aria-label="Dummy Commerce · Ir al catálogo"><span className="brand-mark"><Icon name="bag" /></span><span>dummy<span className="brand-subtitle">commerce</span></span></Link>
+      <nav className="main-nav" aria-label="Navegación principal"><NavLink end to="/">Catálogo</NavLink>
+        {user && <><NavLink to="/orders">Mis pedidos</NavLink><NavLink to="/notifications">Notificaciones</NavLink>{user.role === 'ADMIN' && <NavLink to="/admin">Administración</NavLink>}</>}
       </nav>
-      <div className="session-actions">{loading ? <span>Comprobando sesión…</span> : user ? <><span className="account-email">{user.email}</span><button className="text-button" disabled={busy} onClick={() => sessionAction(renew)}>Renovar sesión</button><button className="secondary" disabled={busy} onClick={() => sessionAction(logout)}>Salir</button></> : <Link className="button" to="/login">Iniciar sesión</Link>}</div>
+      <div className="session-actions"><NavLink className="cart-link" to="/cart" aria-label={`Carrito (${count})`}><Icon name="bag" /><span>Carrito</span><span className="cart-count">{count}</span></NavLink>
+        {loading ? <span>Comprobando sesión…</span> : user ? <div className="account-actions"><span className="account-email">{user.email}<span className="account-role">{user.role === 'ADMIN' ? 'Administrador' : 'Mi cuenta'}</span></span><button className="text-button" disabled={busy} onClick={() => sessionAction(renew)}>Renovar sesión</button><button className="secondary" disabled={busy} onClick={() => sessionAction(logout)}>Salir</button></div> : <><Link className="login-link" to="/login">Iniciar sesión</Link><Link className="button" to="/register">Crear cuenta</Link></>}
+      </div>
     </div></header>
     <main id="main"><Feedback error={error || problem} message={message} /><Outlet /></main>
-    <footer>Dummy Commerce</footer>
+    <footer className="site-footer"><div><Link className="footer-brand" to="/">Dummy Commerce<span>Una experiencia de compra completa.</span></Link><p>Proyecto de portfolio · Demo con pagos simulados</p><Link to="/">Explorar catálogo <Icon name="arrow" /></Link></div></footer>
   </>;
 }
 function AdminLayout() {
-  return <><nav className="admin-nav" aria-label="Administración"><NavLink to="/admin/products">Productos</NavLink><NavLink to="/admin/categories">Categorías</NavLink><NavLink to="/admin/inventory">Inventario</NavLink><NavLink to="/admin/payments">Pagos</NavLink></nav><Outlet /></>;
+  return <div className="admin-layout"><aside className="admin-sidebar"><p className="eyebrow">Panel de gestión</p><h2>Administración</h2><p className="muted">Tu tienda, en orden.</p><nav className="admin-nav" aria-label="Administración"><NavLink to="/admin/products">Productos<span>Catálogo e imágenes</span></NavLink><NavLink to="/admin/categories">Categorías<span>Organización del catálogo</span></NavLink><NavLink to="/admin/inventory">Inventario<span>Stock y disponibilidad</span></NavLink><NavLink to="/admin/payments">Pagos<span>Consulta por pedido</span></NavLink></nav><Link className="back-link" to="/">Volver a la tienda</Link></aside><div className="admin-content"><Outlet /></div></div>;
 }
 export default function App() {
   return <Routes><Route element={<Layout />}>

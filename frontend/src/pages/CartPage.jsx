@@ -5,6 +5,8 @@ import { useAuth } from '../auth/AuthContext.jsx';
 import { orders, store } from '../api/index.js';
 import Feedback from '../components/Feedback.jsx';
 import { cartTotal, money } from '../format.js';
+import PageHeading from '../components/PageHeading.jsx';
+import EmptyState from '../components/EmptyState.jsx';
 
 export default function CartPage() {
   const cart = useCart();
@@ -43,8 +45,8 @@ export default function CartPage() {
     finally { setBusy(false); }
   }
   return <>
-    <h1>Carrito</h1><Feedback error={error} message={notice} />
-    {cart.items.length === 0 ? <p>Tu carrito está vacío. <Link to="/">Ver catálogo</Link></p> : <>
+    <PageHeading eyebrow="Tu selección" title="Carrito" description="Revisa tus productos antes de confirmar la compra."><Link className="back-link" to="/">Seguir comprando →</Link></PageHeading><Feedback error={error} message={notice} />
+    {cart.items.length === 0 ? <EmptyState title="Tu carrito está vacío"><p>Encuentra algo que te guste y añádelo desde su ficha de producto.</p><Link className="button" to="/">Explorar catálogo</Link></EmptyState> : <>
       <div className="table-wrap"><table><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th><th>Acciones</th></tr></thead>
         <tbody>{cart.items.map(item => <tr key={item.productId}>
           <td><Link to={`/products/${item.productId}`}>{item.name}</Link>{item.status !== 'ACTIVE' && <p className="error-text">No disponible</p>}</td>
@@ -52,14 +54,14 @@ export default function CartPage() {
           <td>{money(item.unitPrice)}</td><td>{money(cartTotal([item]))}</td>
           <td><button className="secondary" disabled={busy} onClick={() => cart.remove(item.productId)}>Quitar</button></td>
         </tr>)}</tbody></table></div>
-      <div className="checkout-summary"><p className="price">Total: {money(cartTotal(cart.items))}</p>
+      <section className="card checkout-summary"><div><p className="eyebrow">Resumen de compra</p><p className="price">Total: {money(cartTotal(cart.items))}</p><p className="muted">Pago simulado. No necesitas introducir una tarjeta.</p></div><div>
         <div className="actions"><button className="secondary" disabled={busy} onClick={updatePrices}>Actualizar carrito</button>
           {user ? <button disabled={busy || cart.items.some(item => item.status !== 'ACTIVE') || cartTotal(cart.items) <= 0} onClick={checkout}>{busy ? 'Procesando…' : 'Confirmar compra'}</button>
             : <Link className="button" to="/login" state={{ from: '/cart' }}>Inicia sesión para comprar</Link>}
         </div>
         <p className="muted">El importe definitivo se valida al crear el pedido.</p>
         {cartTotal(cart.items) <= 0 && <p className="notice">El pedido debe tener un importe mayor que cero.</p>}
-      </div>
+      </div></section>
     </>}
   </>;
 }

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { inventory, store } from '../api/index.js';
 import { useLoad } from '../api/useLoad.js';
 import Feedback from '../components/Feedback.jsx';
+import PageHeading from '../components/PageHeading.jsx';
 
 export default function AdminInventoryPage() {
   const [params, setParams] = useSearchParams();
@@ -30,7 +31,7 @@ export default function AdminInventoryPage() {
     finally { setBusy(false); }
   }
   return <>
-    <div className="page-heading"><h1>Inventario</h1><button className="secondary" disabled={!productId || busy} onClick={stock.reload}>Consultar stock</button></div>
+    <PageHeading title="Inventario" description="Consulta las unidades disponibles y ajusta el stock de cada producto."><button className="secondary" disabled={!productId || busy} onClick={stock.reload}>Consultar stock</button></PageHeading>
     <Feedback loading={products.loading || stock.loading} error={products.error || stock.error || error} message={notice} />
     <label className="card">Producto<select value={productId} disabled={busy} onChange={event => { setParams(event.target.value ? { productId: event.target.value } : {}); setError(null); setNotice(null); }}>
       <option value="">Seleccionar producto</option>{products.data?.map(product => <option key={product.id} value={product.id}>{product.name} ({product.status})</option>)}

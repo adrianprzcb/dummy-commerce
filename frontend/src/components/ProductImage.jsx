@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { imageUrl } from '../api/index.js';
+import Icon from './Icon.jsx';
 
 export default function ProductImage({ product, image, className = '' }) {
   const selected = image || product?.images?.find(item => item.primary) || product?.images?.[0];
@@ -8,6 +9,6 @@ export default function ProductImage({ product, image, className = '' }) {
   return <div className={`product-image ${className}`}>
     {url && failedUrl !== url
       ? <img src={url} alt={selected.altText || product?.name || 'Imagen del producto'} onError={() => setFailedUrl(url)} />
-      : <span>{url ? 'Imagen no disponible' : 'Sin imagen'}</span>}
+      : <span className="image-placeholder"><Icon name="box" /><span>{url ? 'Imagen no disponible' : 'Sin imagen'}</span></span>}
   </div>;
 }
