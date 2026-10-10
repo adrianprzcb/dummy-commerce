@@ -80,6 +80,7 @@ public class ProductImageService
     }
 
     @Override
+    @Transactional
     public void remove(UUID productId, UUID imageId) {
         Product product = getExistingProduct(productId);
 

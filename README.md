@@ -91,10 +91,23 @@ mvn -f backend/notifications/pom.xml test
 
 Las suites incluyen tests de dominio, aplicación, seguridad y persistencia con PostgreSQL real en Testcontainers, además de almacenamiento MinIO, mensajería, idempotencia y compensaciones.
 
+## Frontend local
+
+Con el backend levantado, ejecutar en otra terminal (Node.js 20.19+ o 22.12+):
+
+```sh
+cd frontend
+npm install
+npm run dev
+```
+
+Abrir `http://localhost:5173`. React, Vite, JavaScript y CSS sencillo ofrecen catálogo, carrito, compra con seguimiento de la Saga, pedidos y notificaciones. ADMIN dispone de productos, categorías, imágenes MinIO, stock y consulta de pagos. Las URLs de los seis servicios se configuran con las variables `VITE_*_API_URL` de `frontend/.env.example`; los defaults corresponden a Compose. Para verificaciones: `npm run build`, `npm run lint` y `npm test`.
+
 ## Estructura
 
 ```text
 backend/                  users, store, inventory, orders, payments, notifications
+frontend/                 React, Vite, JavaScript y CSS
 infrastructure/postgres/  Inicialización de bases y permisos
 postman/                  Colección y environment local
 docker-compose.yml        Entorno completo del backend

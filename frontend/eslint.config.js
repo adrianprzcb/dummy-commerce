@@ -1,0 +1,21 @@
+import js from '@eslint/js';
+
+export default [
+  { ignores: ['dist/**', 'node_modules/**'] },
+  js.configs.recommended,
+  {
+    files: ['**/*.{js,jsx}'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      parserOptions: { ecmaFeatures: { jsx: true } },
+      globals: {
+        window: 'readonly', document: 'readonly', fetch: 'readonly',
+        localStorage: 'readonly', sessionStorage: 'readonly',
+        AbortController: 'readonly', setTimeout: 'readonly', clearTimeout: 'readonly',
+        URL: 'readonly', URLSearchParams: 'readonly', FormData: 'readonly',
+      },
+    },
+    rules: { 'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }] },
+  },
+];

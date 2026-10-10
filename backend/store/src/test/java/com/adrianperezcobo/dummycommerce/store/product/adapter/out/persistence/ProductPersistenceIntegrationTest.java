@@ -3,6 +3,8 @@ package com.adrianperezcobo.dummycommerce.store.product.adapter.out.persistence;
 import com.adrianperezcobo.dummycommerce.store.category.adapter.out.persistence.CategoryJpaEntity;
 import com.adrianperezcobo.dummycommerce.store.category.adapter.out.persistence.CategoryJpaRepository;
 import com.adrianperezcobo.dummycommerce.store.product.application.port.out.ProductRepository;
+import com.adrianperezcobo.dummycommerce.store.product.application.port.out.ProductImageStoragePort;
+import com.adrianperezcobo.dummycommerce.store.product.application.service.ProductImageService;
 import com.adrianperezcobo.dummycommerce.store.product.domain.Product;
 import com.adrianperezcobo.dummycommerce.store.product.domain.ProductImage;
 import com.adrianperezcobo.dummycommerce.store.product.domain.ProductStatus;
@@ -15,6 +17,11 @@ import org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -23,6 +30,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.Replace.NONE;
 
 @DataJpaTest(
@@ -31,7 +39,8 @@ import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTest
 @AutoConfigureTestDatabase(replace = NONE)
 @Import({
         ProductPersistenceAdapter.class,
-        ProductPersistenceMapper.class
+        ProductPersistenceMapper.class,
+        ProductImageService.class
 })
 @ImportAutoConfiguration(FlywayAutoConfiguration.class)
 @Testcontainers
@@ -47,6 +56,15 @@ class ProductPersistenceIntegrationTest {
 
     @Autowired
     private CategoryJpaRepository categoryJpaRepository;
+
+    @Autowired
+    private ProductImageService imageService;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+
+    @MockitoBean
+    private ProductImageStoragePort imageStorage;
 
     private UUID categoryId;
 
@@ -129,5 +147,23 @@ class ProductPersistenceIntegrationTest {
 
         assertThat(loaded.getImages().getFirst().isPrimary())
                 .isTrue();
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void shouldRemoveImageWithoutAnExistingCallerTransaction() {
+        var transaction = new TransactionTemplate(transactionManager);
+        Product product = new Product(UUID.randomUUID(), "Image removal", "",
+                new BigDecimal("10.00"), ProductStatus.ACTIVE, categoryId);
+        ProductImage image = new ProductImage(UUID.randomUUID(),
+                "products/" + product.getId() + "/front", "Front", 0, true);
+        product.addImage(image);
+        transaction.executeWithoutResult(status -> productRepository.save(product));
+
+        imageService.remove(product.getId(), image.getId());
+
+        Product loaded = transaction.execute(status -> productRepository.findById(product.getId()).orElseThrow());
+        assertThat(loaded.getImages()).isEmpty();
+        verify(imageStorage).delete(image.getObjectKey());
     }
 }
