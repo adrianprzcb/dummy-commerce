@@ -66,6 +66,9 @@ public class JwtAccessTokenAdapter implements AccessTokenPort {
                     .parseSignedClaims(token)
                     .getPayload();
 
+            if (claims.getExpiration() == null || claims.get("role", String.class) == null) {
+                throw new InvalidAccessTokenException();
+            }
             return new AuthenticatedUser(
                     UUID.fromString(claims.getSubject()),
                     claims.get("email", String.class),

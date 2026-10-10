@@ -59,6 +59,6 @@ class FlywayMigrationIntegrationTest {
                         Integer.class
                 );
 
-        assertThat(count).isEqualTo(1);
+        assertThat(count).isEqualTo(4);
     }
 }

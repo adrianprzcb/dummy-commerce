@@ -44,7 +44,7 @@ public class PaymentService implements
             ProcessPaymentCommand command
     ) {
         /*
-         * Idempotencia básica:
+         * Idempotencia bÃ¡sica:
          *
          * Si ese pedido ya tiene un pago finalizado,
          * fallido o reembolsado, devolvemos exactamente
@@ -117,7 +117,7 @@ public class PaymentService implements
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = PaymentRefundFailedException.class)
     public Payment refund(
             UUID paymentId
     ) {
@@ -145,7 +145,7 @@ public class PaymentService implements
         }
 
         /*
-         * Esta comprobación se hace ANTES de llamar
+         * Esta comprobaciÃ³n se hace ANTES de llamar
          * al proveedor externo.
          */
         if (payment.getStatus()

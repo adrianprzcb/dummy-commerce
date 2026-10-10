@@ -61,6 +61,6 @@ class FlywayMigrationIntegrationTest {
                 );
 
         assertThat(count)
-                .isEqualTo(1);
+                .isEqualTo(4);
     }
 }

@@ -26,6 +26,9 @@ class RegisterUserServiceTest {
     @Mock
     private PasswordEncoderPort passwordEncoder;
 
+    @Mock
+    private com.adrianperezcobo.dummycommerce.users.shared.outbox.OutboxPort outbox;
+
     @InjectMocks
     private RegisterUserService service;
 
@@ -64,6 +67,8 @@ class RegisterUserServiceTest {
 
         assertThat(result.isEnabled()).isTrue();
         assertThat(result.getCreatedAt()).isNotNull();
+        verify(outbox).save(any(), eq(result.getId()), eq("dummy-commerce.users.user-registered.v1"),
+                eq(result.getId().toString()), any(), any());
 
         verify(passwordEncoder)
                 .encode("password123");
@@ -91,7 +96,7 @@ class RegisterUserServiceTest {
                         EmailAlreadyExistsException.class
                 );
 
-        verifyNoInteractions(passwordEncoder);
+        verifyNoInteractions(passwordEncoder, outbox);
 
         verify(userRepository, never())
                 .save(any());

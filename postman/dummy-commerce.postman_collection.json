@@ -1,0 +1,2786 @@
+{
+  "info": {
+    "name": "Dummy Commerce Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Selecciona el environment local. Login USER y ADMIN guardan tokens; los endpoints administrativos usan adminAccessToken. Ejecuta únicamente E2E Flow en el runner para el recorrido completo. Las operaciones manuales y DLT se ejecutan de forma explícita; DLT requiere coordenadas reales del broker."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth / Users",
+      "item": [
+        {
+          "name": "Registrar USER",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{usersBaseUrl}}/api/auth/register",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"userId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login USER",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{usersBaseUrl}}/api/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "const data=pm.response.json(); pm.environment.set(\"accessToken\",data.accessToken); pm.environment.set(\"refreshToken\",data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Identidad USER",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{usersBaseUrl}}/api/users/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"userId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{usersBaseUrl}}/api/auth/refresh",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "const data=pm.response.json(); pm.environment.set(\"accessToken\",data.accessToken); pm.environment.set(\"refreshToken\",data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login ADMIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{usersBaseUrl}}/api/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"adminAccessToken\", pm.response.json().accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{usersBaseUrl}}/api/auth/logout",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if(pm.response.code===204){pm.environment.unset(\"accessToken\");pm.environment.unset(\"refreshToken\");}",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Store",
+      "item": [
+        {
+          "name": "Catálogo público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{storeBaseUrl}}/api/products",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Categorías públicas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{storeBaseUrl}}/api/categories",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Categoría",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{storeBaseUrl}}/api/categories/{{categoryId}}",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear categoría",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{storeBaseUrl}}/api/categories",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Portfolio {{$timestamp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"categoryId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{storeBaseUrl}}/api/products",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Producto portfolio\",\n  \"description\": \"Producto de desarrollo\",\n  \"price\": 12.34,\n  \"categoryId\": \"{{categoryId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"productId\", pm.response.json().id);",
+                  "if(pm.response.code<300) pm.environment.set(\"unitPrice\",pm.response.json().price);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producto público",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{storeBaseUrl}}/api/products/{{productId}}",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Actualizar producto",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{storeBaseUrl}}/api/products/{{productId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Producto actualizado\",\n  \"description\": \"Descripción\",\n  \"price\": \"{{unitPrice}}\",\n  \"categoryId\": \"{{categoryId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Activar producto",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{storeBaseUrl}}/api/products/{{productId}}/activate",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Desactivar producto",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{storeBaseUrl}}/api/products/{{productId}}/deactivate",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Retirar producto",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{storeBaseUrl}}/api/products/{{productId}}/discontinue",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preparar imagen",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{storeBaseUrl}}/api/products/{{productId}}/images/upload-url",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"imageId\", pm.response.json().imageId);",
+                  "if (pm.response.code < 300) pm.environment.set(\"uploadUrl\", pm.response.json().uploadUrl);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Subir imagen a MinIO",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "image/svg+xml"
+              }
+            ],
+            "url": "{{uploadUrl}}",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><rect width=\"16\" height=\"16\" fill=\"#336699\"/></svg>"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Confirmar imagen",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{storeBaseUrl}}/api/products/{{productId}}/images/{{imageId}}/confirm",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"altText\": \"Producto\",\n  \"position\": 0,\n  \"primary\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Imagen primaria",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{storeBaseUrl}}/api/products/{{productId}}/images/{{imageId}}/primary",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Leer imagen",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{storeBaseUrl}}/api/products/{{productId}}/images/{{imageId}}/content",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar imagen",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{storeBaseUrl}}/api/products/{{productId}}/images/{{imageId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Inventory Admin",
+      "item": [
+        {
+          "name": "Crear stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{inventoryBaseUrl}}/api/inventory",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"initialQuantity\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar stock",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{inventoryBaseUrl}}/api/inventory/{{productId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aumentar stock",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{inventoryBaseUrl}}/api/inventory/{{productId}}/increase",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Disminuir stock",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{inventoryBaseUrl}}/api/inventory/{{productId}}/decrease",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reserva manual",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{inventoryBaseUrl}}/api/reservations",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{$guid}}\",\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"reservationId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar reserva",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{inventoryBaseUrl}}/api/reservations/{{reservationId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Confirmar reserva manual",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{inventoryBaseUrl}}/api/reservations/{{reservationId}}/confirm",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Liberar reserva manual",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{inventoryBaseUrl}}/api/reservations/{{reservationId}}/release",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Crear pedido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{ordersBaseUrl}}/api/orders",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"quantity\": 2,\n      \"unitPrice\": \"{{unitPrice}}\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"orderId\", pm.response.json().id);",
+                  "pm.environment.set(\"e2ePollAttempts\",0);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mis pedidos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{ordersBaseUrl}}/api/orders/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mi pedido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{ordersBaseUrl}}/api/orders/{{orderId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pedidos de usuario ADMIN",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{ordersBaseUrl}}/api/orders/user/{{userId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Transiciones manuales ADMIN",
+          "item": [
+            {
+              "name": "stock-reserved",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{ordersBaseUrl}}/api/orders/{{orderId}}/stock-reserved",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "{",
+                      "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                      "",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "payment-completed",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{ordersBaseUrl}}/api/orders/{{orderId}}/payment-completed",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "{",
+                      "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                      "",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "confirm",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{ordersBaseUrl}}/api/orders/{{orderId}}/confirm",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "{",
+                      "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                      "",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "cancel",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{ordersBaseUrl}}/api/orders/{{orderId}}/cancel",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{adminAccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "{",
+                      "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                      "",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Payments Admin",
+      "item": [
+        {
+          "name": "Pago del pedido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{paymentsBaseUrl}}/api/payments/order/{{orderId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"paymentId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar pago",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{paymentsBaseUrl}}/api/payments/{{paymentId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Procesar pago manual",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{paymentsBaseUrl}}/api/payments",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"orderId\": \"{{$guid}}\",\n  \"amount\": 12.34,\n  \"currency\": \"EUR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"paymentId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refund manual",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{paymentsBaseUrl}}/api/payments/{{paymentId}}/refund",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Mis notificaciones",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{notificationsBaseUrl}}/api/notifications/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if(pm.response.code===200){const n=pm.response.json().find(x=>x.orderId===pm.environment.get(\"orderId\"));if(n){pm.environment.set(\"notificationId\",n.id);pm.environment.set(\"sourceEventId\",n.sourceEventId);}}",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mi notificación",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{notificationsBaseUrl}}/api/notifications/{{notificationId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mi notificación por evento",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{notificationsBaseUrl}}/api/notifications/event/{{sourceEventId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Notificaciones de usuario ADMIN",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{notificationsBaseUrl}}/api/notifications/user/{{userId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Crear notificación manual ADMIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{notificationsBaseUrl}}/api/notifications",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sourceEventId\": \"{{$guid}}\",\n  \"userId\": \"{{userId}}\",\n  \"orderId\": \"{{orderId}}\",\n  \"channel\": \"EMAIL\",\n  \"recipient\": \"{{userEmail}}\",\n  \"subject\": \"Notificación de desarrollo\",\n  \"message\": \"Mensaje de desarrollo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"notificationId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "users health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{usersBaseUrl}}/actuator/health",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "store health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{storeBaseUrl}}/actuator/health",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "inventory health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{inventoryBaseUrl}}/actuator/health",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "orders health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{ordersBaseUrl}}/actuator/health",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "payments health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{paymentsBaseUrl}}/actuator/health",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "notifications health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{notificationsBaseUrl}}/actuator/health",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "OpenAPI",
+      "item": [
+        {
+          "name": "users api-docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{usersBaseUrl}}/v3/api-docs",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "store api-docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{storeBaseUrl}}/v3/api-docs",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "inventory api-docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{inventoryBaseUrl}}/v3/api-docs",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "orders api-docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{ordersBaseUrl}}/v3/api-docs",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "payments api-docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{paymentsBaseUrl}}/v3/api-docs",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "notifications api-docs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{notificationsBaseUrl}}/v3/api-docs",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DLT Admin",
+      "item": [
+        {
+          "name": "inventory reprocess",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{inventoryBaseUrl}}/api/admin/kafka/dlt/reprocess",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"{{inventoryDltTopic}}\",\n  \"partition\": \"{{dltPartition}}\",\n  \"offset\": \"{{dltOffset}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "orders reprocess",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{ordersBaseUrl}}/api/admin/kafka/dlt/reprocess",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"{{ordersDltTopic}}\",\n  \"partition\": \"{{dltPartition}}\",\n  \"offset\": \"{{dltOffset}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "payments reprocess",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{paymentsBaseUrl}}/api/admin/kafka/dlt/reprocess",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"{{paymentsDltTopic}}\",\n  \"partition\": \"{{dltPartition}}\",\n  \"offset\": \"{{dltOffset}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "notifications reprocess",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{notificationsBaseUrl}}/api/admin/kafka/dlt/reprocess",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topic\": \"{{notificationsDltTopic}}\",\n  \"partition\": \"{{dltPartition}}\",\n  \"offset\": \"{{dltOffset}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "E2E Flow",
+      "item": [
+        {
+          "name": "E2E Login ADMIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{usersBaseUrl}}/api/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"adminAccessToken\", pm.response.json().accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E Crear categoría",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{storeBaseUrl}}/api/categories",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Portfolio {{$timestamp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"categoryId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E Crear producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{storeBaseUrl}}/api/products",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Producto portfolio\",\n  \"description\": \"Producto de desarrollo\",\n  \"price\": 12.34,\n  \"categoryId\": \"{{categoryId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"productId\", pm.response.json().id);",
+                  "if(pm.response.code<300) pm.environment.set(\"unitPrice\",pm.response.json().price);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E Activar producto",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{storeBaseUrl}}/api/products/{{productId}}/activate",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E Preparar imagen",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{storeBaseUrl}}/api/products/{{productId}}/images/upload-url",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"imageId\", pm.response.json().imageId);",
+                  "if (pm.response.code < 300) pm.environment.set(\"uploadUrl\", pm.response.json().uploadUrl);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E Subir imagen",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "image/svg+xml"
+              }
+            ],
+            "url": "{{uploadUrl}}",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><rect width=\"16\" height=\"16\" fill=\"#336699\"/></svg>"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E Confirmar imagen",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{storeBaseUrl}}/api/products/{{productId}}/images/{{imageId}}/confirm",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"altText\": \"Producto\",\n  \"position\": 0,\n  \"primary\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E Crear stock",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{inventoryBaseUrl}}/api/inventory",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"initialQuantity\": 20\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E Registrar USER",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{usersBaseUrl}}/api/auth/register",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.environment.set(\"userEmail\",\"postman-\"+Date.now()+\"@example.com\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"userId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E Login USER",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{usersBaseUrl}}/api/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "const data=pm.response.json(); pm.environment.set(\"accessToken\",data.accessToken); pm.environment.set(\"refreshToken\",data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E Crear pedido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{ordersBaseUrl}}/api/orders",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"quantity\": 2,\n      \"unitPrice\": \"{{unitPrice}}\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"orderId\", pm.response.json().id);",
+                  "pm.environment.set(\"e2ePollAttempts\",0);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E Esperar CONFIRMED",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{ordersBaseUrl}}/api/orders/{{orderId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "const data=pm.response.json();",
+                  "let attempts=Number(pm.environment.get(\"e2ePollAttempts\")||0)+1;",
+                  "pm.environment.set(\"e2ePollAttempts\",attempts);",
+                  "if(data.status===\"CONFIRMED\"){pm.test(\"Pedido confirmado\",()=>pm.expect(data.status).to.eql(\"CONFIRMED\"));}",
+                  "else if(attempts<30 && data.status!==\"CANCELLED\"){pm.execution.setNextRequest(pm.info.requestName);setTimeout(()=>{},1000);}",
+                  "else {pm.test(\"Saga completada en plazo\",()=>pm.expect(data.status).to.eql(\"CONFIRMED\"));pm.execution.setNextRequest(null);}",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E Consultar pago",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{paymentsBaseUrl}}/api/payments/order/{{orderId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminAccessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP esperado\", () => pm.expect(pm.response.code).to.be.oneOf([200,201,204,307]));",
+                  "if (pm.response.code < 300) pm.environment.set(\"paymentId\", pm.response.json().id);",
+                  "pm.test(\"Pago completado\", () => pm.expect(pm.response.json().status).to.eql(\"COMPLETED\"));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2E Esperar Notification SENT",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{notificationsBaseUrl}}/api/notifications/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{accessToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "{",
+                  "pm.test(\"HTTP 200\",()=>pm.response.to.have.status(200));",
+                  "const notification=pm.response.json().find(n=>n.orderId===pm.environment.get(\"orderId\"));",
+                  "let attempts=Number(pm.environment.get(\"notificationPollAttempts\")||0)+1;",
+                  "pm.environment.set(\"notificationPollAttempts\",attempts);",
+                  "if(!notification && attempts<30){pm.execution.setNextRequest(pm.info.requestName);setTimeout(()=>{},1000);}",
+                  "else{pm.test(\"Notificación enviada al recipient real\",()=>{pm.expect(notification.status).to.eql(\"SENT\");pm.expect(notification.recipient).to.eql(pm.environment.get(\"userEmail\"));});pm.environment.unset(\"notificationPollAttempts\");pm.execution.setNextRequest(null);}",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

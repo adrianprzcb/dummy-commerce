@@ -15,6 +15,11 @@ import com.adrianperezcobo.dummycommerce.orders.order.domain.OrderStatus;
 import com.adrianperezcobo.dummycommerce.orders.order.domain.exception.InvalidOrderStateException;
 import com.adrianperezcobo.dummycommerce.orders.shared.adapter.in.web.GlobalExceptionHandler;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import com.adrianperezcobo.dummycommerce.orders.shared.security.*;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -34,13 +39,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(OrderController.class)
 @Import({
+        SecurityConfig.class,
+        JwtAuthenticationFilter.class,
         OrderWebMapper.class,
         GlobalExceptionHandler.class
 })
 class OrderControllerTest {
 
+    @MockitoBean
+    private com.adrianperezcobo.dummycommerce.orders.order.application.port.out.ProductCatalogPort catalog;
+
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private WebApplicationContext context;
+    @MockitoBean
+    private JwtTokenValidator jwtValidator;
+
+    @BeforeEach
+    void authenticateAdmin() {
+        org.mockito.Mockito.lenient().when(catalog.findActivePrice(any())).thenReturn(java.util.Optional.of(new BigDecimal("10.00")));
+        org.mockito.Mockito.when(jwtValidator.parse("ADMIN_TOKEN")).thenReturn(
+                new AuthenticatedUser(java.util.UUID.randomUUID(), "admin@example.com", "ADMIN"));
+        mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity())
+                .defaultRequest(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/")
+                        .header("Authorization", "Bearer ADMIN_TOKEN")).build();
+    }
 
     @MockitoBean
     private CreateOrderUseCase createOrderUseCase;
@@ -67,6 +92,8 @@ class OrderControllerTest {
     void shouldCreateOrder() throws Exception {
         UUID userId = UUID.randomUUID();
         UUID productId = UUID.randomUUID();
+        when(catalog.findActivePrice(productId))
+                .thenReturn(java.util.Optional.of(new BigDecimal("19.99")));
 
         Order order = new Order(
                 UUID.randomUUID(),

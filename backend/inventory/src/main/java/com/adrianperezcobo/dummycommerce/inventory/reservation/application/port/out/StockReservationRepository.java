@@ -3,6 +3,7 @@ package com.adrianperezcobo.dummycommerce.inventory.reservation.application.port
 import com.adrianperezcobo.dummycommerce.inventory.reservation.domain.StockReservation;
 
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 public interface StockReservationRepository {
@@ -28,4 +29,8 @@ public interface StockReservationRepository {
             UUID orderId,
             UUID productId
     );
+
+    List<StockReservation> findByOrderId(UUID orderId);
+
+    List<StockReservation> findByOrderIdForUpdate(UUID orderId);
 }

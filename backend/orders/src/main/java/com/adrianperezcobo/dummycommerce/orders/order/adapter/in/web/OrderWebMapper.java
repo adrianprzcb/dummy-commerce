@@ -9,15 +9,22 @@ import com.adrianperezcobo.dummycommerce.orders.order.application.command.Create
 import com.adrianperezcobo.dummycommerce.orders.order.domain.Order;
 import com.adrianperezcobo.dummycommerce.orders.order.domain.OrderItem;
 import org.springframework.stereotype.Component;
+import java.util.UUID;
 
 @Component
 public class OrderWebMapper {
+    private final com.adrianperezcobo.dummycommerce.orders.order.application.port.out.ProductCatalogPort catalog;
+
+    public OrderWebMapper(com.adrianperezcobo.dummycommerce.orders.order.application.port.out.ProductCatalogPort catalog) {
+        this.catalog = catalog;
+    }
+
 
     public CreateOrderCommand toCommand(
-            CreateOrderRequest request
+            CreateOrderRequest request, UUID userId
     ) {
         return new CreateOrderCommand(
-                request.userId(),
+                userId,
                 request.items()
                         .stream()
                         .map(this::toCommand)
@@ -28,10 +35,15 @@ public class OrderWebMapper {
     private CreateOrderItemCommand toCommand(
             CreateOrderItemRequest request
     ) {
+        var price = catalog.findActivePrice(request.productId()).orElseThrow(() ->
+                new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT, "Product is unavailable"));
+        if (price.compareTo(request.unitPrice()) != 0) {
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT, "Product price changed; refresh catalogue");
+        }
         return new CreateOrderItemCommand(
                 request.productId(),
                 request.quantity(),
-                request.unitPrice()
+                price
         );
     }
 

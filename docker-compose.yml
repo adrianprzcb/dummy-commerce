@@ -23,12 +23,13 @@ services:
 
 
   minio:
-    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    image: coollabsio/minio:RELEASE.2025-10-15T17-29-55Z@sha256:69b55a1c1c5dc285ce04db96689f5b2102317fc77a50680a1874ca6efd1c87f9
     container_name: dummy-commerce-minio
 
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin123
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_API_CORS_ALLOW_ORIGIN: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost:4200}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
 
     command: server /data --console-address ":9001"
 
@@ -49,9 +50,17 @@ services:
   store:
     build:
       context: ./backend/store
-      dockerfile: Dockerfile
+      dockerfile: ../Dockerfile
 
     container_name: dummy-commerce-store
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
 
     environment:
       STORE_DB_URL: jdbc:postgresql://postgres:5432/store_db
@@ -59,10 +68,14 @@ services:
       STORE_DB_PASSWORD: store_password
 
       MINIO_ENDPOINT: http://minio:9000
-      MINIO_PUBLIC_ENDPOINT: http://localhost:9000
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin123
+      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://localhost:9000}
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+      MINIO_REGION: ${MINIO_REGION:-us-east-1}
       MINIO_BUCKET: product-images
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--Xms64m -Xmx256m}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost:4200}
+      JWT_SECRET: ${JWT_SECRET:-ZHVtbXktY29tbWVyY2UtZGV2LWp3dC1zZWNyZXQtMzJiIQ==}
 
     ports:
       - "8080:8080"
@@ -77,16 +90,31 @@ services:
   users:
     build:
       context: ./backend/users
-      dockerfile: Dockerfile
+      dockerfile: ../Dockerfile
 
     container_name: dummy-commerce-users
 
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+
     environment:
+      OUTBOX_PUBLISHER_ENABLED: ${USERS_OUTBOX_PUBLISHER_ENABLED:-true}
       USERS_DB_URL: jdbc:postgresql://postgres:5432/users_db
       USERS_DB_USER: users_user
       USERS_DB_PASSWORD: users_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
 
-      JWT_SECRET: ZHVtbXktY29tbWVyY2UtZGV2LWp3dC1zZWNyZXQtMzJiIQ==
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--Xms64m -Xmx256m}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost:4200}
+      JWT_SECRET: ${JWT_SECRET:-ZHVtbXktY29tbWVyY2UtZGV2LWp3dC1zZWNyZXQtMzJiIQ==}
+      BOOTSTRAP_ADMIN_ENABLED: ${BOOTSTRAP_ADMIN_ENABLED:-true}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@dummy-commerce.local}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-LocalAdmin123!}
       JWT_ACCESS_EXPIRATION_SECONDS: 900
       REFRESH_TOKEN_EXPIRATION_SECONDS: 2592000
 
@@ -96,8 +124,181 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+
+  kafka:
+    image: apache/kafka:4.1.2
+    container_name: dummy-commerce-kafka
+
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:29093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      CLUSTER_ID: 4L6g3nShT-eMCtK--X86sw
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+    ports:
+      - "9092:9092"
+
+    healthcheck:
+      test: ["CMD", "/opt/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "kafka:29092"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+
+
+  orders:
+    build:
+      context: ./backend/orders
+      dockerfile: ../Dockerfile
+
+    container_name: dummy-commerce-orders
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+
+    environment:
+      STORE_BASE_URL: http://store:8080
+      ORDERS_DB_URL: jdbc:postgresql://postgres:5432/orders_db
+      ORDERS_DB_USER: orders_user
+      ORDERS_DB_PASSWORD: orders_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--Xms64m -Xmx256m}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost:4200}
+      JWT_SECRET: ${JWT_SECRET:-ZHVtbXktY29tbWVyY2UtZGV2LWp3dC1zZWNyZXQtMzJiIQ==}
+
+    ports:
+      - "8082:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+
+  inventory:
+    build:
+      context: ./backend/inventory
+      dockerfile: ../Dockerfile
+
+    container_name: dummy-commerce-inventory
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+
+    environment:
+      INVENTORY_DB_URL: jdbc:postgresql://postgres:5432/inventory_db
+      INVENTORY_DB_USER: inventory_user
+      INVENTORY_DB_PASSWORD: inventory_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--Xms64m -Xmx256m}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost:4200}
+      JWT_SECRET: ${JWT_SECRET:-ZHVtbXktY29tbWVyY2UtZGV2LWp3dC1zZWNyZXQtMzJiIQ==}
+
+    ports:
+      - "8083:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+
+  payments:
+    build:
+      context: ./backend/payments
+      dockerfile: ../Dockerfile
+
+    container_name: dummy-commerce-payments
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+
+    environment:
+      PAYMENTS_DB_URL: jdbc:postgresql://postgres:5432/payments_db
+      PAYMENTS_DB_USER: payments_user
+      PAYMENTS_DB_PASSWORD: payments_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--Xms64m -Xmx256m}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost:4200}
+      JWT_SECRET: ${JWT_SECRET:-ZHVtbXktY29tbWVyY2UtZGV2LWp3dC1zZWNyZXQtMzJiIQ==}
+      PAYMENT_SIMULATOR_MODE: ${PAYMENT_SIMULATOR_MODE:-success}
+
+    ports:
+      - "8084:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+
+  notifications:
+    build:
+      context: ./backend/notifications
+      dockerfile: ../Dockerfile
+
+    container_name: dummy-commerce-notifications
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+
+    environment:
+      NOTIFICATIONS_DB_URL: jdbc:postgresql://postgres:5432/notifications_db
+      NOTIFICATIONS_DB_USER: notifications_user
+      NOTIFICATIONS_DB_PASSWORD: notifications_password
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS:--Xms64m -Xmx256m}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:3000,http://localhost:4200}
+      JWT_SECRET: ${JWT_SECRET:-ZHVtbXktY29tbWVyY2UtZGV2LWp3dC1zZWNyZXQtMzJiIQ==}
+      NOTIFICATION_SIMULATOR_MODE: ${NOTIFICATION_SIMULATOR_MODE:-success}
+
+    ports:
+      - "8085:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
 
 
 volumes:
   postgres_data:
+    name: ${POSTGRES_VOLUME_NAME:-dummy-commerce_backend_postgres_data}
   minio_data:
+    name: ${MINIO_VOLUME_NAME:-dummy-commerce_backend_minio_data}

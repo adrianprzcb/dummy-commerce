@@ -31,6 +31,9 @@ class OrderServiceTest {
     @Mock
     private OrderRepository orderRepository;
 
+    @Mock
+    private com.adrianperezcobo.dummycommerce.orders.shared.outbox.OutboxPort outboxPort;
+
     @InjectMocks
     private OrderService service;
 
@@ -129,6 +132,26 @@ class OrderServiceTest {
 
         assertThat(result)
                 .isSameAs(order);
+    }
+
+    @Test
+    void shouldRejectZeroTotalWithoutSavingOrderOrOutbox() {
+        CreateOrderCommand command = new CreateOrderCommand(
+                UUID.randomUUID(),
+                List.of(
+                        new CreateOrderItemCommand(
+                                UUID.randomUUID(),
+                                2,
+                                BigDecimal.ZERO
+                        )
+                )
+        );
+
+        assertThatThrownBy(() -> service.create(command))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Order total amount must be greater than zero");
+
+        verifyNoInteractions(orderRepository, outboxPort);
     }
 
     @Test

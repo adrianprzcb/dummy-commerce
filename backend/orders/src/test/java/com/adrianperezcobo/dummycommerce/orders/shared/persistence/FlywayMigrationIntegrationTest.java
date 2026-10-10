@@ -78,6 +78,6 @@ class FlywayMigrationIntegrationTest {
                 );
 
         assertThat(migrations)
-                .isEqualTo(1);
+                .isEqualTo(7);
     }
 }

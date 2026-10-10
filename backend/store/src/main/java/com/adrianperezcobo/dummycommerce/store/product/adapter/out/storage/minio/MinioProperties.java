@@ -9,6 +9,7 @@ public record MinioProperties(
         String accessKey,
         String secretKey,
         String bucket,
+        String region,
         int uploadUrlExpirationSeconds
 ) {
 }

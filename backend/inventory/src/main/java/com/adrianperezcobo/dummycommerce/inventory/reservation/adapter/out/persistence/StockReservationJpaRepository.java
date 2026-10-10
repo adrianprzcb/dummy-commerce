@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 public interface StockReservationJpaRepository
@@ -33,4 +34,10 @@ public interface StockReservationJpaRepository
             @Param("reservationId")
             UUID reservationId
     );
+
+    List<StockReservationJpaEntity> findByOrderIdOrderByProductIdAsc(UUID orderId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT r FROM StockReservationJpaEntity r WHERE r.orderId = :orderId ORDER BY r.productId")
+    List<StockReservationJpaEntity> findByOrderIdForUpdate(@Param("orderId") UUID orderId);
 }

@@ -4,6 +4,9 @@ import com.adrianperezcobo.dummycommerce.orders.order.adapter.in.web.request.Cre
 import com.adrianperezcobo.dummycommerce.orders.order.adapter.in.web.response.OrderResponse;
 import com.adrianperezcobo.dummycommerce.orders.order.application.port.in.*;
 import jakarta.validation.Valid;
+import com.adrianperezcobo.dummycommerce.orders.shared.security.AuthenticatedUser;
+import com.adrianperezcobo.dummycommerce.orders.order.application.exception.OrderNotFoundException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,22 +51,29 @@ public class OrderController {
     public OrderResponse create(
             @Valid
             @RequestBody
-            CreateOrderRequest request
+            CreateOrderRequest request,
+            @AuthenticationPrincipal AuthenticatedUser user
     ) {
         return mapper.toResponse(
                 createOrderUseCase.create(
-                        mapper.toCommand(request)
+                        mapper.toCommand(request, user.userId())
                 )
         );
     }
 
     @GetMapping("/{orderId}")
     public OrderResponse get(
-            @PathVariable UUID orderId
+            @PathVariable UUID orderId,
+            @AuthenticationPrincipal AuthenticatedUser user
     ) {
-        return mapper.toResponse(
-                getOrderUseCase.getById(orderId)
-        );
+        var order = getOrderUseCase.getById(orderId);
+        if (!user.isAdmin() && !user.userId().equals(order.getUserId())) throw new OrderNotFoundException(orderId);
+        return mapper.toResponse(order);
+    }
+
+    @GetMapping("/me")
+    public List<OrderResponse> getMine(@AuthenticationPrincipal AuthenticatedUser user) {
+        return getUserOrdersUseCase.getByUserId(user.userId()).stream().map(mapper::toResponse).toList();
     }
 
     @GetMapping("/user/{userId}")

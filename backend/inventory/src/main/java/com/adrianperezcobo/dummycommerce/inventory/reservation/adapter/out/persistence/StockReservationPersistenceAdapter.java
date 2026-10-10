@@ -5,6 +5,7 @@ import com.adrianperezcobo.dummycommerce.inventory.reservation.domain.StockReser
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -93,5 +94,15 @@ public class StockReservationPersistenceAdapter
                 entity.getStatus(),
                 entity.getCreatedAt()
         );
+    }
+
+    @Override
+    public List<StockReservation> findByOrderId(UUID orderId) {
+        return repository.findByOrderIdOrderByProductIdAsc(orderId).stream().map(this::toDomain).toList();
+    }
+
+    @Override
+    public List<StockReservation> findByOrderIdForUpdate(UUID orderId) {
+        return repository.findByOrderIdForUpdate(orderId).stream().map(this::toDomain).toList();
     }
 }

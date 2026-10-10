@@ -3,11 +3,14 @@ package com.adrianperezcobo.dummycommerce.orders.order.application.service;
 import com.adrianperezcobo.dummycommerce.orders.order.application.command.CreateOrderCommand;
 import com.adrianperezcobo.dummycommerce.orders.order.application.command.CreateOrderItemCommand;
 import com.adrianperezcobo.dummycommerce.orders.order.application.exception.OrderNotFoundException;
+import com.adrianperezcobo.dummycommerce.orders.order.application.integration.inventory.InventoryTopics;
+import com.adrianperezcobo.dummycommerce.orders.order.application.integration.inventory.ReserveStockCommandV1;
 import com.adrianperezcobo.dummycommerce.orders.order.application.port.in.*;
 import com.adrianperezcobo.dummycommerce.orders.order.application.port.out.OrderRepository;
 import com.adrianperezcobo.dummycommerce.orders.order.domain.Order;
 import com.adrianperezcobo.dummycommerce.orders.order.domain.OrderItem;
 import com.adrianperezcobo.dummycommerce.orders.order.domain.OrderStatus;
+import com.adrianperezcobo.dummycommerce.orders.shared.outbox.OutboxPort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,11 +29,14 @@ public class OrderService implements
         CancelOrderUseCase {
 
     private final OrderRepository orderRepository;
+    private final OutboxPort outboxPort;
 
     public OrderService(
-            OrderRepository orderRepository
+            OrderRepository orderRepository,
+            OutboxPort outboxPort
     ) {
         this.orderRepository = orderRepository;
+        this.outboxPort = outboxPort;
     }
 
     @Override
@@ -44,15 +50,48 @@ public class OrderService implements
                         .map(this::createOrderItem)
                         .toList();
 
+        Instant now = Instant.now();
+
         Order order = new Order(
                 UUID.randomUUID(),
                 command.userId(),
                 items,
                 OrderStatus.CREATED,
-                Instant.now()
+                now
         );
 
-        return orderRepository.save(order);
+        Order savedOrder =
+                orderRepository.save(order);
+
+        UUID messageId =
+                UUID.randomUUID();
+
+        ReserveStockCommandV1 reserveStockCommand =
+                new ReserveStockCommandV1(
+                        messageId,
+                        savedOrder.getId(),
+                        now,
+                        savedOrder.getItems()
+                                .stream()
+                                .map(item ->
+                                        new ReserveStockCommandV1.Item(
+                                                item.getProductId(),
+                                                item.getQuantity()
+                                        )
+                                )
+                                .toList()
+                );
+
+        outboxPort.save(
+                messageId,
+                savedOrder.getId(),
+                InventoryTopics.RESERVE_STOCK_V1,
+                savedOrder.getId().toString(),
+                reserveStockCommand,
+                now
+        );
+
+        return savedOrder;
     }
 
     @Override
@@ -84,7 +123,8 @@ public class OrderService implements
     public Order markStockReserved(
             UUID orderId
     ) {
-        Order order = getForUpdate(orderId);
+        Order order =
+                getForUpdate(orderId);
 
         order.markStockReserved();
 
@@ -96,7 +136,8 @@ public class OrderService implements
     public Order markPaymentCompleted(
             UUID orderId
     ) {
-        Order order = getForUpdate(orderId);
+        Order order =
+                getForUpdate(orderId);
 
         order.markPaymentCompleted();
 
@@ -108,7 +149,8 @@ public class OrderService implements
     public Order confirm(
             UUID orderId
     ) {
-        Order order = getForUpdate(orderId);
+        Order order =
+                getForUpdate(orderId);
 
         order.confirm();
 
@@ -120,7 +162,8 @@ public class OrderService implements
     public Order cancel(
             UUID orderId
     ) {
-        Order order = getForUpdate(orderId);
+        Order order =
+                getForUpdate(orderId);
 
         order.cancel();
 

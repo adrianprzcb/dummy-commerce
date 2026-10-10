@@ -7,6 +7,10 @@ import com.adrianperezcobo.dummycommerce.notifications.notification.application.
 import com.adrianperezcobo.dummycommerce.notifications.notification.application.port.in.GetNotificationUseCase;
 import com.adrianperezcobo.dummycommerce.notifications.notification.application.port.in.GetUserNotificationsUseCase;
 import jakarta.validation.Valid;
+import com.adrianperezcobo.dummycommerce.notifications.shared.security.AuthenticatedUser;
+import com.adrianperezcobo.dummycommerce.notifications.notification.domain.Notification;
+import com.adrianperezcobo.dummycommerce.notifications.notification.application.exception.NotificationNotFoundException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -65,25 +69,27 @@ public class NotificationController {
 
     @GetMapping("/{notificationId}")
     public NotificationResponse getById(
-            @PathVariable UUID notificationId
+            @PathVariable UUID notificationId,
+            @AuthenticationPrincipal AuthenticatedUser user
     ) {
-        return mapper.toResponse(
-                getNotificationUseCase.getById(
-                        notificationId
-                )
-        );
+        Notification notification = getNotificationUseCase.getById(notificationId);
+        requireOwner(notification, user);
+        return mapper.toResponse(notification);
     }
 
     @GetMapping("/event/{sourceEventId}")
     public NotificationResponse getBySourceEventId(
-            @PathVariable UUID sourceEventId
+            @PathVariable UUID sourceEventId,
+            @AuthenticationPrincipal AuthenticatedUser user
     ) {
-        return mapper.toResponse(
-                getNotificationBySourceEventUseCase
-                        .getBySourceEventId(
-                                sourceEventId
-                        )
-        );
+        Notification notification = getNotificationBySourceEventUseCase.getBySourceEventId(sourceEventId);
+        requireOwner(notification, user);
+        return mapper.toResponse(notification);
+    }
+
+    @GetMapping("/me")
+    public List<NotificationResponse> getMine(@AuthenticationPrincipal AuthenticatedUser user) {
+        return getUserNotificationsUseCase.getByUserId(user.userId()).stream().map(mapper::toResponse).toList();
     }
 
     @GetMapping("/user/{userId}")
@@ -95,5 +101,10 @@ public class NotificationController {
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
+    }
+    private void requireOwner(Notification notification, AuthenticatedUser user) {
+        if (!user.isAdmin() && !user.userId().equals(notification.getUserId())) {
+            throw new NotificationNotFoundException(notification.getId());
+        }
     }
 }

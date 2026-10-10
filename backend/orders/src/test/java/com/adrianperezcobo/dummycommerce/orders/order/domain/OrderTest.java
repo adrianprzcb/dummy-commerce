@@ -81,6 +81,44 @@ class OrderTest {
     }
 
     @Test
+    void shouldRejectZeroTotalAmount() {
+        assertThatThrownBy(() ->
+                createOrder(
+                        OrderStatus.CREATED,
+                        List.of(
+                                item(UUID.randomUUID(), 2, "0.00"),
+                                item(UUID.randomUUID(), 1, "0.00")
+                        )
+                )
+        ).isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Order total amount must be greater than zero");
+    }
+
+    @Test
+    void shouldRejectTotalRoundedToZero() {
+        assertThatThrownBy(() ->
+                createOrder(
+                        OrderStatus.CREATED,
+                        List.of(item(UUID.randomUUID(), 1, "0.004"))
+                )
+        ).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldAllowFreeItemWhenOrderTotalIsPositive() {
+        Order order = createOrder(
+                OrderStatus.CREATED,
+                List.of(
+                        item(UUID.randomUUID(), 1, "0.00"),
+                        item(UUID.randomUUID(), 1, "0.01")
+                )
+        );
+
+        assertThat(order.getTotalAmount())
+                .isEqualByComparingTo("0.01");
+    }
+
+    @Test
     void shouldRejectDuplicatedProducts() {
         UUID productId = UUID.randomUUID();
 

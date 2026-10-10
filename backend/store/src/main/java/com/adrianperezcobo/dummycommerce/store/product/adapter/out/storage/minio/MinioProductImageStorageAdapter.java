@@ -119,8 +119,13 @@ public class MinioProductImageStorageAdapter
 
             return true;
 
+        } catch (io.minio.errors.ErrorResponseException e) {
+            if ("NoSuchKey".equals(e.errorResponse().code()) || "NoSuchObject".equals(e.errorResponse().code())) {
+                return false;
+            }
+            throw new IllegalStateException("Could not inspect MinIO object", e);
         } catch (Exception e) {
-            return false;
+            throw new IllegalStateException("Could not inspect MinIO object", e);
         }
     }
 

@@ -41,6 +41,12 @@ public class Order {
         ensureNoDuplicatedProducts(items);
 
         this.items = new ArrayList<>(items);
+
+        if (getTotalAmount().signum() <= 0) {
+            throw new IllegalArgumentException(
+                    "Order total amount must be greater than zero"
+            );
+        }
     }
 
     public void markStockReserved() {

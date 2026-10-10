@@ -147,4 +147,36 @@ public class GlobalExceptionHandler {
 
         return problem;
     }
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ProblemDetail handleMalformedRequest(Exception exception, HttpServletRequest request) {
+        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Request body could not be read");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return problem;
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ProblemDetail handleDataConflict(Exception exception, HttpServletRequest request) {
+        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Request conflicts with existing data");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return problem;
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ProblemDetail handleUnexpected(Exception exception, HttpServletRequest request) {
+        if (exception instanceof org.springframework.web.ErrorResponse response) {
+            return response.getBody();
+        }
+        org.slf4j.LoggerFactory.getLogger(getClass()).error("Unhandled request failure", exception);
+        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Request could not be completed");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return problem;
+    }
+
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ProblemDetail handleInvalidParameter(Exception exception, HttpServletRequest request) {
+        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Request parameter is invalid");
+        problem.setInstance(URI.create(request.getRequestURI()));
+        return problem;
+    }
+
 }

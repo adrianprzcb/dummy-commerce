@@ -54,7 +54,7 @@ class FlywayMigrationIntegrationTest {
 
         assertThat(appliedMigrations)
                 .isNotNull()
-                .isGreaterThanOrEqualTo(2);
+                .isEqualTo(5);
     }
 
     private Integer tableExists(String tableName) {

@@ -9,6 +9,11 @@ import com.adrianperezcobo.dummycommerce.store.product.domain.Product;
 import com.adrianperezcobo.dummycommerce.store.product.domain.ProductStatus;
 import com.adrianperezcobo.dummycommerce.store.shared.adapter.in.web.GlobalExceptionHandler;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import com.adrianperezcobo.dummycommerce.store.shared.security.*;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -26,6 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(ProductController.class)
 @Import({
+        SecurityConfig.class,
+        JwtAuthenticationFilter.class,
         ProductWebMapper.class,
         GlobalExceptionHandler.class
 })
@@ -33,6 +40,20 @@ class ProductControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private WebApplicationContext context;
+    @MockitoBean
+    private JwtTokenValidator jwtValidator;
+
+    @BeforeEach
+    void authenticateAdmin() {
+        org.mockito.Mockito.when(jwtValidator.parse("ADMIN_TOKEN")).thenReturn(
+                new AuthenticatedUser(java.util.UUID.randomUUID(), "admin@example.com", "ADMIN"));
+        mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity())
+                .defaultRequest(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/")
+                        .header("Authorization", "Bearer ADMIN_TOKEN")).build();
+    }
 
     @MockitoBean
     private CreateProductUseCase createProductUseCase;
