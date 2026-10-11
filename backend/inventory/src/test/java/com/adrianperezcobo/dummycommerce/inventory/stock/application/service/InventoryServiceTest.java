@@ -15,6 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
+import com.adrianperezcobo.dummycommerce.inventory.stock.application.result.StockAvailability;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -29,6 +31,29 @@ class InventoryServiceTest {
 
     @InjectMocks
     private InventoryService service;
+
+    @Test
+    void availabilityExcludesReservedStockAndIncludesMissingInventoryAsZero() {
+        UUID available = UUID.randomUUID();
+        UUID reserved = UUID.randomUUID();
+        UUID missing = UUID.randomUUID();
+        when(inventoryRepository.findAllByProductIds(List.of(available, reserved, missing)))
+                .thenReturn(List.of(new InventoryItem(reserved, 0, 10), new InventoryItem(available, 3, 7)));
+
+        assertThat(service.getAvailability(List.of(available, reserved, missing, available)))
+                .containsExactly(new StockAvailability(available, 3), new StockAvailability(reserved, 0),
+                        new StockAvailability(missing, 0));
+        verify(inventoryRepository).findAllByProductIds(List.of(available, reserved, missing));
+        verifyNoMoreInteractions(inventoryRepository);
+    }
+
+    @Test
+    void availabilityRejectsEmptyAndOversizedBatchesBeforeQuerying() {
+        assertThatThrownBy(() -> service.getAvailability(List.of())).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.getAvailability(java.util.Collections.nCopies(101, UUID.randomUUID())))
+                .isInstanceOf(IllegalArgumentException.class);
+        verifyNoInteractions(inventoryRepository);
+    }
 
     @Test
     void shouldCreateInventoryItem() {

@@ -5,6 +5,7 @@ import com.adrianperezcobo.dummycommerce.inventory.stock.domain.InventoryItem;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -31,6 +32,11 @@ public class InventoryPersistenceAdapter
         return toDomain(
                 repository.save(entity)
         );
+    }
+
+    @Override
+    public List<InventoryItem> findAllByProductIds(List<UUID> productIds) {
+        return repository.findAllById(productIds).stream().map(this::toDomain).toList();
     }
 
     @Override

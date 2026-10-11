@@ -57,7 +57,7 @@ También puedes editar productos, desactivarlos y aumentar o disminuir su stock.
 2. Inicia sesión con el cliente de prueba. Si prefieres utilizar una cuenta nueva, créala desde **Crear cuenta**.
 3. Añade un producto al carrito y pulsa **Confirmar compra**.
 4. El pedido se actualiza automáticamente hasta quedar **Confirmado**.
-5. Consulta **Mis pedidos** y **Notificaciones** para ver el resultado.
+5. En **Mis pedidos**, abre el pedido para ver su estado y los avisos de confirmación o cancelación.
 
 Los pagos y los emails son simulados: no se pide tarjeta ni se envían correos reales. La notificación puede tardar unos segundos.
 
@@ -65,7 +65,7 @@ Para comprobar la parte administrativa, copia el ID del pedido, entra como admin
 
 ### Otros casos para probar
 
-- **Sin stock:** compra más unidades de las disponibles. El pedido termina cancelado.
+- **Sin stock:** deja un producto a cero desde Inventario. Seguirá visible en la tienda con **Fuera de stock** y no se podrá añadir al carrito. Al reponer unidades aparecerá **Disponible**. Si compras más unidades de las disponibles, el pedido termina cancelado.
 - **Precio modificado:** prepara un carrito y cambia el precio desde otra sesión de administrador. La compra se rechaza con el precio anterior; pulsa **Actualizar carrito** para revisar el nuevo total.
 - **Producto desactivado:** desactiva un producto que ya esté en un carrito. No se podrá comprar y, al actualizar el carrito, aparecerá como no disponible.
 
@@ -75,7 +75,7 @@ Para detenerla, pulsa **Ctrl+C** en la terminal del frontend y ejecuta `docker c
 
 ## Frontend
 
-React, Vite, JavaScript, React Router, `fetch` y CSS. Incluye la tienda pública, carrito persistente, autenticación, pedidos, notificaciones y panel de administración. El estado de los pedidos se consulta periódicamente mientras se procesa la compra.
+React, Vite, JavaScript, React Router, `fetch` y CSS. Incluye la tienda pública, carrito persistente, autenticación, pedidos con sus avisos y panel de administración. El estado del pedido y sus avisos se actualizan automáticamente mientras se procesa la compra.
 
 Las URLs de las APIs se pueden configurar en `frontend/.env` tomando como referencia [frontend/.env.example](frontend/.env.example). Los valores predeterminados funcionan con Docker Compose.
 
@@ -101,6 +101,8 @@ Cada servicio organiza el código por funcionalidad y utiliza una arquitectura h
 Cada microservicio tiene su propia base de datos y usuario en PostgreSQL, alojados en una misma instancia local. Flyway gestiona las migraciones de cada módulo. Los servicios intercambian información mediante APIs y eventos, sin consultar directamente las tablas de otro servicio.
 
 Inventory controla las reservas dentro de una transacción y bloquea las filas de stock para evitar conflictos entre compras simultáneas. Primero valida todas las líneas del pedido y después aplica la reserva completa.
+
+El catálogo consulta la disponibilidad con `GET /api/inventory/availability?productIds=...`, público y limitado a 100 productos por petición. Devuelve solo las unidades disponibles, sin incluir reservas ni datos administrativos; un producto sin inventario tiene cero unidades. El estado **Activo** indica que el producto está habilitado, mientras que **Fuera de stock** indica que no quedan unidades para comprar. La reserva del backend vuelve a comprobar el stock al procesar cada pedido.
 
 ### Compra distribuida: Saga
 

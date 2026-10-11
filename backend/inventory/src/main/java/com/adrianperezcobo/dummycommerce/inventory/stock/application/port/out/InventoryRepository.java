@@ -3,11 +3,14 @@ package com.adrianperezcobo.dummycommerce.inventory.stock.application.port.out;
 import com.adrianperezcobo.dummycommerce.inventory.stock.domain.InventoryItem;
 
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 public interface InventoryRepository {
 
     InventoryItem save(InventoryItem item);
+
+    List<InventoryItem> findAllByProductIds(List<UUID> productIds);
 
     Optional<InventoryItem> findByProductId(
             UUID productId

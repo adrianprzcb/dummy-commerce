@@ -7,6 +7,8 @@ import com.adrianperezcobo.dummycommerce.inventory.stock.application.exception.I
 import com.adrianperezcobo.dummycommerce.inventory.stock.application.port.in.CreateInventoryItemUseCase;
 import com.adrianperezcobo.dummycommerce.inventory.stock.application.port.in.DecreaseStockUseCase;
 import com.adrianperezcobo.dummycommerce.inventory.stock.application.port.in.GetInventoryUseCase;
+import com.adrianperezcobo.dummycommerce.inventory.stock.application.port.in.GetStockAvailabilityUseCase;
+import com.adrianperezcobo.dummycommerce.inventory.stock.application.result.StockAvailability;
 import com.adrianperezcobo.dummycommerce.inventory.stock.application.port.in.IncreaseStockUseCase;
 import com.adrianperezcobo.dummycommerce.inventory.stock.application.port.out.InventoryRepository;
 import com.adrianperezcobo.dummycommerce.inventory.stock.domain.InventoryItem;
@@ -14,11 +16,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class InventoryService implements
         CreateInventoryItemUseCase,
         GetInventoryUseCase,
+        GetStockAvailabilityUseCase,
         IncreaseStockUseCase,
         DecreaseStockUseCase {
 
@@ -67,6 +72,21 @@ public class InventoryService implements
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<StockAvailability> getAvailability(List<UUID> productIds) {
+        if (productIds == null || productIds.isEmpty() || productIds.size() > 100
+                || productIds.stream().anyMatch(java.util.Objects::isNull)) {
+            throw new IllegalArgumentException("Between 1 and 100 product identifiers are required");
+        }
+        var uniqueIds = productIds.stream().distinct().toList();
+        var quantities = inventoryRepository.findAllByProductIds(uniqueIds).stream()
+                .collect(Collectors.toMap(InventoryItem::getProductId, InventoryItem::getAvailableQuantity));
+        return uniqueIds.stream()
+                .map(id -> new StockAvailability(id, quantities.getOrDefault(id, 0)))
+                .toList();
+    }
+
+    @Override
     @Transactional
     public InventoryItem increase(
             ChangeStockCommand command
@@ -105,4 +125,4 @@ public class InventoryService implements
 
         return inventoryRepository.save(item);
     }
-} 
+}

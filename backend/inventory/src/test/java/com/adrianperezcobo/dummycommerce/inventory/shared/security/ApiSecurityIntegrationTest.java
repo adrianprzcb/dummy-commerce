@@ -33,6 +33,63 @@ class ApiSecurityIntegrationTest {
     @Value("${security.jwt.secret}") String secret;
 
     @Test
+    void availabilityIsPublicAndExposesOnlyPurchasableUnits() throws Exception {
+        UUID stocked = UUID.randomUUID();
+        UUID reserved = UUID.randomUUID();
+        UUID missing = UUID.randomUUID();
+        jdbc.update("INSERT INTO inventory_items(product_id, available_quantity, reserved_quantity) VALUES (?, ?, ?)", stocked, 3, 7);
+        jdbc.update("INSERT INTO inventory_items(product_id, available_quantity, reserved_quantity) VALUES (?, ?, ?)", reserved, 0, 10);
+
+        mvc.perform(get("/api/inventory/availability").param("productIds", stocked + "," + reserved + "," + missing))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].productId").value(stocked.toString()))
+                .andExpect(jsonPath("$[0].availableQuantity").value(3))
+                .andExpect(jsonPath("$[1].availableQuantity").value(0))
+                .andExpect(jsonPath("$[2].availableQuantity").value(0))
+                .andExpect(jsonPath("$[0].reservedQuantity").doesNotExist())
+                .andExpect(jsonPath("$[0].totalQuantity").doesNotExist());
+        mvc.perform(get("/api/inventory/availability").param("productIds", stocked.toString())
+                        .header("Authorization", bearer(UUID.randomUUID(), "USER")))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/inventory/" + stocked).header("Authorization", bearer(UUID.randomUUID(), "USER")))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/inventory/availability").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void availabilityReflectsRestockingAndDepletion() throws Exception {
+        UUID product = UUID.randomUUID();
+        jdbc.update("INSERT INTO inventory_items(product_id, available_quantity, reserved_quantity) VALUES (?, 0, 2)", product);
+        mvc.perform(get("/api/inventory/availability").param("productIds", product.toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].availableQuantity").value(0));
+        String admin = bearer(UUID.randomUUID(), "ADMIN");
+        mvc.perform(patch("/api/inventory/" + product + "/increase").header("Authorization", admin)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"quantity\":4}"))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/inventory/availability").param("productIds", product.toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].availableQuantity").value(4));
+        mvc.perform(patch("/api/inventory/" + product + "/decrease").header("Authorization", admin)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"quantity\":4}"))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/inventory/availability").param("productIds", product.toString()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$[0].availableQuantity").value(0));
+    }
+
+    @Test
+    void publicAvailabilityRejectsMissingMalformedAndOversizedIdentifiers() throws Exception {
+        mvc.perform(get("/api/inventory/availability")).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/inventory/availability").param("productIds", ""))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/inventory/availability").param("productIds", "invalid"))
+                .andExpect(status().isBadRequest());
+        String ids = String.join(",", java.util.Collections.nCopies(101, UUID.randomUUID().toString()));
+        mvc.perform(get("/api/inventory/availability").param("productIds", ids))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void missingJwtIsUnauthorized() throws Exception {
         mvc.perform(get("/api/inventory/00000000-0000-0000-0000-000000000001")).andExpect(status().isUnauthorized());
     }

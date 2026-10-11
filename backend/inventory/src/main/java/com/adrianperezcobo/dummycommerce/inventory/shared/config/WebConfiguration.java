@@ -38,7 +38,8 @@ public class WebConfiguration {
     @Bean
     OpenApiCustomizer publicOperations() {
         return api -> api.getPaths().forEach((path, item) -> {
-            if (path.startsWith("/api/auth/") || path.equals("/actuator/health")) {
+            if (path.startsWith("/api/auth/") || path.equals("/actuator/health")
+                    || path.equals("/api/inventory/availability")) {
                 item.readOperations().forEach(operation -> operation.setSecurity(List.of()));
             }
         });
