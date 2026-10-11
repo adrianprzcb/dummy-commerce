@@ -11,7 +11,6 @@ import ProductPage from './pages/ProductPage.jsx';
 import CartPage from './pages/CartPage.jsx';
 import OrdersPage from './pages/OrdersPage.jsx';
 import OrderPage from './pages/OrderPage.jsx';
-import NotificationsPage from './pages/NotificationsPage.jsx';
 import AdminProductsPage from './pages/AdminProductsPage.jsx';
 import AdminProductPage from './pages/AdminProductPage.jsx';
 import AdminCategoriesPage from './pages/AdminCategoriesPage.jsx';
@@ -36,7 +35,7 @@ function Layout() {
     <div className="demo-bar">Una tienda de demostración. Los pagos y las notificaciones son simulados.</div>
     <header className="site-header"><div className="header-inner"><Link className="brand" to="/" aria-label="Dummy Commerce · Ir al catálogo"><span className="brand-mark"><Icon name="bag" /></span><span>dummy<span className="brand-subtitle">commerce</span></span></Link>
       <nav className="main-nav" aria-label="Navegación principal"><NavLink end to="/">Catálogo</NavLink>
-        {user && <><NavLink to="/orders">Mis pedidos</NavLink><NavLink to="/notifications">Notificaciones</NavLink>{user.role === 'ADMIN' && <NavLink to="/admin">Administración</NavLink>}</>}
+        {user && <><NavLink to="/orders">Mis pedidos</NavLink>{user.role === 'ADMIN' && <NavLink to="/admin">Administración</NavLink>}</>}
       </nav>
       <div className="session-actions"><NavLink className="cart-link" to="/cart" aria-label={`Carrito (${count})`}><Icon name="bag" /><span>Carrito</span><span className="cart-count">{count}</span></NavLink>
         {loading ? <span>Comprobando sesión…</span> : user ? <div className="account-actions"><span className="account-email">{user.email}<span className="account-role">{user.role === 'ADMIN' ? 'Administrador' : 'Mi cuenta'}</span></span><button className="text-button" disabled={busy} onClick={() => sessionAction(renew)}>Renovar sesión</button><button className="secondary" disabled={busy} onClick={() => sessionAction(logout)}>Salir</button></div> : <><Link className="login-link" to="/login">Iniciar sesión</Link><Link className="button" to="/register">Crear cuenta</Link></>}
@@ -54,7 +53,7 @@ export default function App() {
     <Route index element={<CatalogPage />} />
     <Route path="login" element={<AuthPage key="login" />} /><Route path="register" element={<AuthPage key="register" register />} />
     <Route path="products/:id" element={<ProductPage />} /><Route path="cart" element={<CartPage />} />
-    <Route element={<ProtectedRoute />}><Route path="orders" element={<OrdersPage />} /><Route path="orders/:id" element={<OrderPage />} /><Route path="notifications" element={<NotificationsPage />} /></Route>
+    <Route element={<ProtectedRoute />}><Route path="orders" element={<OrdersPage />} /><Route path="orders/:id" element={<OrderPage />} /><Route path="notifications" element={<Navigate to="/orders" replace />} /></Route>
     <Route element={<ProtectedRoute admin />}><Route path="admin" element={<AdminLayout />}>
       <Route index element={<Navigate to="products" replace />} /><Route path="products" element={<AdminProductsPage />} />
       <Route path="products/new" element={<AdminProductPage />} /><Route path="products/:id" element={<AdminProductPage />} />

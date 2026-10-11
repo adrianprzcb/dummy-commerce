@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../components/CartContext.jsx';
 import { useAuth } from '../auth/AuthContext.jsx';
-import { orders, store } from '../api/index.js';
+import { orders, loadProduct } from '../api/index.js';
 import Feedback from '../components/Feedback.jsx';
 import { cartTotal, money } from '../format.js';
 import PageHeading from '../components/PageHeading.jsx';
@@ -32,8 +32,8 @@ export default function CartPage() {
     try {
       const updated = await Promise.all(cart.items.map(async item => {
         try {
-          const product = await store.product(item.productId);
-          return { ...item, name: product.name, unitPrice: product.price, status: product.status };
+          const product = await loadProduct(item.productId);
+          return { ...item, name: product.name, unitPrice: product.price, status: product.status, availableQuantity: product.availableQuantity };
         } catch (problem) {
           if (problem.status === 404) return { ...item, status: 'INACTIVE' };
           throw problem;
@@ -49,14 +49,14 @@ export default function CartPage() {
     {cart.items.length === 0 ? <EmptyState title="Tu carrito está vacío"><p>Encuentra algo que te guste y añádelo desde su ficha de producto.</p><Link className="button" to="/">Explorar catálogo</Link></EmptyState> : <>
       <div className="table-wrap"><table><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th><th>Acciones</th></tr></thead>
         <tbody>{cart.items.map(item => <tr key={item.productId}>
-          <td><Link to={`/products/${item.productId}`}>{item.name}</Link>{item.status !== 'ACTIVE' && <p className="error-text">No disponible</p>}</td>
+          <td><Link to={`/products/${item.productId}`}>{item.name}</Link>{item.status !== 'ACTIVE' ? <p className="error-text">No disponible</p> : item.availableQuantity === 0 && <p className="error-text">Fuera de stock</p>}</td>
           <td><input aria-label={`Cantidad de ${item.name}`} className="quantity" type="number" min="1" max="999" step="1" required disabled={busy} value={item.quantity} onChange={event => cart.quantity(item.productId, Number(event.target.value))} /></td>
           <td>{money(item.unitPrice)}</td><td>{money(cartTotal([item]))}</td>
           <td><button className="secondary" disabled={busy} onClick={() => cart.remove(item.productId)}>Quitar</button></td>
         </tr>)}</tbody></table></div>
       <section className="card checkout-summary"><div><p className="eyebrow">Resumen de compra</p><p className="price">Total: {money(cartTotal(cart.items))}</p><p className="muted">Pago simulado. No necesitas introducir una tarjeta.</p></div><div>
         <div className="actions"><button className="secondary" disabled={busy} onClick={updatePrices}>Actualizar carrito</button>
-          {user ? <button disabled={busy || cart.items.some(item => item.status !== 'ACTIVE') || cartTotal(cart.items) <= 0} onClick={checkout}>{busy ? 'Procesando…' : 'Confirmar compra'}</button>
+          {user ? <button disabled={busy || cart.items.some(item => item.status !== 'ACTIVE' || item.availableQuantity === 0) || cartTotal(cart.items) <= 0} onClick={checkout}>{busy ? 'Procesando…' : 'Confirmar compra'}</button>
             : <Link className="button" to="/login" state={{ from: '/cart' }}>Inicia sesión para comprar</Link>}
         </div>
         <p className="muted">El importe definitivo se valida al crear el pedido.</p>

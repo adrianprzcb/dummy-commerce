@@ -21,8 +21,8 @@ export function CartProvider({ children }) {
     setItems(previous => {
       const found = previous.find(item => item.productId === product.id);
       return found ? previous.map(item => item.productId === product.id
-        ? { ...item, quantity: item.quantity + quantity, unitPrice: product.price, status: product.status } : item)
-        : [...previous, { productId: product.id, name: product.name, unitPrice: product.price, quantity, status: product.status }];
+        ? { ...item, quantity: item.quantity + quantity, unitPrice: product.price, status: product.status, availableQuantity: product.availableQuantity } : item)
+        : [...previous, { productId: product.id, name: product.name, unitPrice: product.price, quantity, status: product.status, availableQuantity: product.availableQuantity }];
     });
   }
   function quantity(productId, value) {

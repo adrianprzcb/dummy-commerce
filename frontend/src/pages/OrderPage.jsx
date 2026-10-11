@@ -7,6 +7,7 @@ import Feedback from '../components/Feedback.jsx';
 import Status from '../components/Status.jsx';
 import { dateTime, money } from '../format.js';
 import PageHeading from '../components/PageHeading.jsx';
+import OrderNotifications from '../components/OrderNotifications.jsx';
 
 export default function OrderPage() {
   const { id } = useParams();
@@ -37,20 +38,21 @@ export default function OrderPage() {
   }, [id, version]);
   return <>
     <Link className="back-link" to="/orders">← Volver a mis pedidos</Link>
-    <PageHeading eyebrow="Mi cuenta" title="Detalle del pedido" description="Consulta los productos y el estado de tu compra."><button className="secondary" onClick={() => setVersion(value => value + 1)}>Actualizar estado</button></PageHeading>
+    <PageHeading eyebrow="Mi cuenta" title="Detalle del pedido"><button className="secondary" onClick={() => setVersion(value => value + 1)}>Actualizar estado</button></PageHeading>
     <Feedback loading={!order && polling} error={error} />
     {order && <>
       <section className="card order-overview"><div className="order-meta"><div><p className="eyebrow">Referencia del pedido</p><p className="id">{order.id}</p><p className="muted">{dateTime(order.createdAt)}</p></div><Status value={order.status} /></div>
         {polling && <p role="status">Estamos procesando tu pedido. El estado se actualiza automáticamente.</p>}
         {!polling && !['CONFIRMED', 'CANCELLED'].includes(order.status) && <p className="notice">El pedido sigue en proceso. Puedes volver a consultar su estado más tarde.</p>}
         {order.status === 'CONFIRMED' && <p className="notice success">Tu pedido se ha confirmado.</p>}
-        {order.status === 'CANCELLED' && <p className="notice error" role="alert">Pedido cancelado. Puede deberse a stock insuficiente, un pago rechazado o una compensación. Consulta tus notificaciones.</p>}
+        {order.status === 'CANCELLED' && <p className="notice error" role="alert">Pedido cancelado. Puede deberse a stock insuficiente, un pago rechazado o una compensación.</p>}
       </section>
       <div className="table-wrap"><table><thead><tr><th>Producto</th><th>Cantidad</th><th>Precio de compra</th><th>Subtotal</th></tr></thead><tbody>
         {order.items.map(item => <tr key={item.id}><td><Link to={`/products/${item.productId}`}>{catalog.data?.find(product => product.id === item.productId)?.name || item.productId}</Link></td>
           <td>{item.quantity}</td><td>{money(item.unitPrice)}</td><td>{money(item.subtotal)}</td></tr>)}
       </tbody></table></div><p className="price">Total: {money(order.totalAmount)}</p>
-      <div className="actions"><Link to="/notifications">Ver notificaciones</Link>{user.role === 'ADMIN' && <Link to={`/admin/payments?orderId=${order.id}`}>Consultar pago</Link>}</div>
+      {user.role === 'ADMIN' && <div className="actions"><Link to={`/admin/payments?orderId=${order.id}`}>Consultar pago</Link></div>}
+      <OrderNotifications orderId={order.id} orderStatus={order.status} />
     </>}
   </>;
 }

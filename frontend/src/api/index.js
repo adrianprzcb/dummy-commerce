@@ -41,6 +41,7 @@ export const orders = {
 };
 export const notifications = { mine: signal => get('notifications', '/api/notifications/me', signal) };
 export const inventory = {
+  availability: (ids, signal) => get('inventory', `/api/inventory/availability?${new URLSearchParams({ productIds: ids.join(',') })}`, signal, false),
   item: (id, signal) => get('inventory', `/api/inventory/${id}`, signal),
   create: body => write('inventory', '/api/inventory', 'POST', body),
   change: (id, action, quantity) => write('inventory', `/api/inventory/${id}/${action}`, 'PATCH', { quantity }),
@@ -49,7 +50,24 @@ export const payments = { forOrder: (id, signal) => get('payments', `/api/paymen
 
 export async function loadCatalog(signal) {
   const [products, categories] = await Promise.all([store.products(signal), store.categories(signal)]);
-  return { products, categories };
+  return { ...await withAvailability(products, signal), categories };
+}
+async function withAvailability(products, signal) {
+  try {
+    const batches = [];
+    for (let index = 0; index < products.length; index += 100) {
+      batches.push(inventory.availability(products.slice(index, index + 100).map(product => product.id), signal));
+    }
+    const quantities = new Map((await Promise.all(batches)).flat().map(item => [item.productId, item.availableQuantity]));
+    return { products: products.map(product => ({ ...product, availableQuantity: quantities.get(product.id) ?? null })), availabilityError: null };
+  } catch (error) {
+    if (signal?.aborted || error.name === 'AbortError') throw error;
+    return { products: products.map(product => ({ ...product, availableQuantity: null })), availabilityError: error };
+  }
+}
+export async function loadProduct(id, signal) {
+  const result = await withAvailability([await store.product(id, signal)], signal);
+  return { ...result.products[0], availabilityError: result.availabilityError };
 }
 export function imageUrl(image) {
   return image ? new URL(image.contentUrl, `${urls.store}/`).href : null;
